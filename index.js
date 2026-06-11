@@ -1,4 +1,4 @@
-const DEBUG = false;
+const DEBUG = true;
 
 const canvas = document.getElementById('sandbox');
 const ctx = canvas.getContext('2d');
@@ -54,6 +54,7 @@ let DISCOVERABLE_ELEMENTS = {
 // Default unlocked elements if no save data exists
 const DEFAULT_SHOWN_ELEMENTS = {
     eraser:     { name: 'Eraser', color: '#000000' },
+    barrier:    { name: 'Barrier', color: '#000000'},
     lava:       { name: 'Lava', color: '#ff7520' },
     sand:       { name: 'Sand', color: '#e0c068' },
     water:      { name: 'Water', color: '#4080ff' },
@@ -98,6 +99,7 @@ const ELEMENTS = {
     radon:      { name: 'Radon', color: '#d0d0d0'},
     lead:       { name: 'Lead', color: '#919191'},
     steam:      { name: 'Steam', color: '#bab7b7'},
+    barrier:    { name: 'Barrier', color: '#000000'}
 };
 
 function update_element_buttons() {
@@ -120,21 +122,37 @@ function update_element_buttons() {
         });
     }
 
-    Object.keys(DISCOVERABLE_ELEMENTS).forEach(key => {
+    if (!DEBUG) Object.keys(DISCOVERABLE_ELEMENTS).forEach(key => {
         if (!shown_elements.hasOwnProperty(key) || DEBUG) {
             const btn = document.createElement('button');
-            if (!DEBUG) btn.disabled = true;
+            btn.disabled = true;
             btn.innerText = ELEMENTS[key].name;
             
             let baseColor = ELEMENTS[key].color === '#000000' ? '#333333' : ELEMENTS[key].color;
-            if (!DEBUG) btn.style.backgroundColor = adjustBrightness(baseColor, -60);
-            else btn.style.backgroundColor = baseColor;
+            btn.style.backgroundColor = adjustBrightness(baseColor, -60);
+            
             
             btn.dataset.type = key;
             
             if (key === currentElement) btn.classList.add('active');
             
-            if (DEBUG) btn.addEventListener('click', () => {
+            btnGrid.appendChild(btn);
+        }
+    });
+
+    else Object.keys(ELEMENTS).forEach(key => {
+        if (!shown_elements.hasOwnProperty(key) || DEBUG) {
+            const btn = document.createElement('button');
+            btn.innerText = ELEMENTS[key].name;
+            
+            let baseColor = ELEMENTS[key].color === '#000000' ? '#333333' : ELEMENTS[key].color;
+            btn.style.backgroundColor = baseColor;
+            
+            btn.dataset.type = key;
+            
+            if (key === currentElement) btn.classList.add('active');
+            
+            btn.addEventListener('click', () => {
                 document.querySelectorAll('.btn-grid button').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentElement = key;
@@ -172,18 +190,7 @@ resetBtn.addEventListener('click', () => {
         localStorage.removeItem('sandbox_shown_elements');
         
         // Reset the runtime object back to defaults (matching your initial list)
-        shown_elements = {
-            eraser:     { name: 'Eraser', color: '#000000' },
-            lava:       { name: 'Lava', color: '#ff7520' },
-            sand:       { name: 'Sand', color: '#e0c068' },
-            water:      { name: 'Water', color: '#4080ff' },
-            soil:       { name: 'Soil', color: '#553b1b' },
-            acid:       { name: 'Acid', color: '#00ff33' },
-            blackhole:  { name: 'Black Hole', color: '#898989' },
-            gunpowder:  { name: 'Gunpowder', color: '#555555' },
-            fertilizer: { name: 'Fertilizer', color: '#d3d3d3' },
-            uranium:    { name: 'Uranium', color: '#5fbf1b'}
-        };
+        shown_elements = DEFAULT_SHOWN_ELEMENTS;
         
         // Default the current selected brush element back to sand
         currentElement = 'sand';
@@ -275,6 +282,7 @@ function createElementAt(x, y, type) {
         cell.life = 400 + Math.random() * 50;
     }
     if (type === 'steam') cell.life = 500 + Math.random() * 40;
+    if (type === 'barrier') cell.color = (Math.random() < 0.5 ? '#ff0000' : '#ffffff');
     
     grid[x][y] = cell;
 }
@@ -316,6 +324,9 @@ function update() {
 
             // --- STONE ---
             if (cell.type === 'stone') continue; // Static block
+
+            // --- BARRIER ---
+            if (cell.type === 'barrier') continue; // Static block
 
             // --- SPOUT ---
             if (cell.type === 'spout') {
@@ -558,13 +569,14 @@ function update() {
             // --- ACID ---
             if (cell.type === 'acid') {
                 // Dissolves things below it
-                if (y + 1 < HEIGHT && grid[x][y + 1] !== 0 && grid[x][y + 1].type !== 'acid' && grid[x][y + 1].type !== 'blackhole' && grid[x][y + 1].type !== 'glass') {
+                undisolvables = ['acid', 'blackhole', 'glass', 'barrier'];
+                if (y + 1 < HEIGHT && grid[x][y + 1] !== 0 && !undisolvables.includes(grid[x][y + 1].type)) {
                     grid[x][y + 1] = 0;
                     grid[x][y] = 0; // Acid consumes itself
-                } else if (x + 1 < WIDTH && grid[x + 1][y] !== 0 && grid[x + 1][y].type !== 'acid' && grid[x + 1][y].type !== 'blackhole' && grid[x + 1][y].type !== 'glass') {
+                } else if (x + 1 < WIDTH && grid[x + 1][y] !== 0 && !undisolvables.includes(grid[x + 1][y].type)) {
                     grid[x + 1][y] = 0;
                     grid[x][y] = 0; // Acid consumes itself
-                } else if (x - 1 > 0 && grid[x - 1][y] !== 0 && grid[x - 1][y].type !== 'acid' && grid[x - 1][y].type !== 'blackhole' && grid[x - 1][y].type !== 'glass') {
+                } else if (x - 1 > 0 && grid[x - 1][y] !== 0 && !undisolvables.includes(grid[x - 1][y].type)) {
                     grid[x - 1][y] = 0;
                     grid[x][y] = 0; // Acid consumes itself
                 } 
@@ -813,7 +825,7 @@ function explode(x, y) {
                 let nx = x + dx;
                 let ny = y + dy;
                 if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT) {
-                    if (grid[nx][ny] && grid[nx][ny].type === 'blackhole') continue;
+                    if (grid[nx][ny] && (grid[nx][ny].type === 'blackhole' || grid[nx][ny].type === 'barrier')) continue;
                     
                     if (Math.random() < 0.6) {
                         grid[nx][ny] = {
