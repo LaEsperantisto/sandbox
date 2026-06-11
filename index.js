@@ -22,6 +22,33 @@ let isDrawing = false;
 let running = true;
 pauseBtn.classList.toggle('running', running);
 
+let DISCOVERABLE_ELEMENTS = {
+    eraser:     { name: 'Eraser', color: '#000000' },
+    brick:      { name: 'Brick', color: '#888888' },
+    sand:       { name: 'Sand', color: '#e0c068' },
+    water:      { name: 'Water', color: '#4080ff' },
+    soil:       { name: 'Soil', color: '#553b1b' },
+    grass_seed: { name: 'Grass Seed', color: '#77cc44' },
+    flower_seed:{ name: 'Flower Seed', color: '#ff66cc' },
+    tree_seed:  { name: 'Tree Seed', color: '#a14b00'},
+    fire:       { name: 'Fire', color: '#ff4500' },
+    gunpowder:  { name: 'Gunpowder', color: '#555555' },
+    blackhole:  { name: 'Black Hole', color: '#898989' },
+    acid:       { name: 'Acid', color: '#00ff33' },
+    lava:       { name: 'Lava', color: '#ff7520' },
+    eternal_lava:{ name: 'Eternal Lava', color: '#ff7520'},
+    stone:      { name: 'Stone', color: '#4d4c4c'},
+    glass:      { name: 'Glass', color: '#b2f9ff'},
+    molten_glass:{ name: 'Molten Glass', color: '#f2ffb4' },
+    wet_sand:   { name: 'Wet Sand', color: '#f8e65c'},
+    fertilizer: { name: 'Fertilizer', color: '#d3d3d3' },
+    uranium:    { name: 'Uranium', color: '#5fbf1b'},
+    thorium:    { name: 'Thorium', color: '#bf9b1b'},
+    radium:     { name: 'Radium', color: '#14ebff'},
+    radon:      { name: 'Radon', color: '#d0d0d0'},
+    lead:       { name: 'Lead', color: '#919191'},
+}
+
 let shown_elements = {
     eraser:     { name: 'Eraser', color: '#000000' },
     lava:       { name: 'Lava', color: '#ff7520' },
@@ -84,7 +111,7 @@ function update_element_buttons() {
         });
     }
 
-    Object.keys(ELEMENTS).forEach(key => {
+    Object.keys(DISCOVERABLE_ELEMENTS).forEach(key => {
         if (!shown_elements.hasOwnProperty(key) || DEBUG) {
             const btn = document.createElement('button');
             if (!DEBUG) btn.disabled = true;
