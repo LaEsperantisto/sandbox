@@ -134,7 +134,7 @@ function update_element_buttons() {
             
             if (key === currentElement) btn.classList.add('active');
             
-            btn.addEventListener('click', () => {
+            if (DEBUG) btn.addEventListener('click', () => {
                 document.querySelectorAll('.btn-grid button').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentElement = key;
@@ -402,7 +402,7 @@ function update() {
                             if (grid[cx][cy].type === 'sand') {
                                 createElementAt(cx, cy, 'wet_sand');
                             }
-                            if (grid[cx][cy].type === 'magma') {
+                            if (grid[cx][cy].type === 'magma' || grid[cx][cy].type === 'fire') {
                                 createElementAt(x, y, 'steam');
                             }
                         }
