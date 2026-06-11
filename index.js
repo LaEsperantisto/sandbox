@@ -1,4 +1,4 @@
-const DEBUG = false;
+const DEBUG = true;
 
 const canvas = document.getElementById('sandbox');
 const ctx = canvas.getContext('2d');
@@ -47,6 +47,8 @@ let DISCOVERABLE_ELEMENTS = {
     radium:     { name: 'Radium', color: '#14ebff'},
     radon:      { name: 'Radon', color: '#d0d0d0'},
     lead:       { name: 'Lead', color: '#919191'},
+    steam:      { name: 'Steam', color: '#bab7b7'},
+    magma:      { name: 'Magma', color: '#ff5500'},
 }
 
 let shown_elements = {
@@ -80,6 +82,7 @@ const ELEMENTS = {
     lava:       { name: 'Lava', color: '#ff7520' },
     eternal_lava:{ name: 'Eternal Lava', color: '#ff7520'},
     stone:      { name: 'Stone', color: '#4d4c4c'},
+    magma:      { name: 'Magma', color: '#ff5500'},
     glass:      { name: 'Glass', color: '#b2f9ff'},
     molten_glass:{ name: 'Molten Glass', color: '#f2ffb4' },
     wet_sand:   { name: 'Wet Sand', color: '#f8e65c'},
@@ -89,6 +92,7 @@ const ELEMENTS = {
     radium:     { name: 'Radium', color: '#14ebff'},
     radon:      { name: 'Radon', color: '#d0d0d0'},
     lead:       { name: 'Lead', color: '#919191'},
+    steam:      { name: 'Steam', color: '#bab7b7'},
 };
 
 function update_element_buttons() {
@@ -213,11 +217,16 @@ function createElementAt(x, y, type) {
     if (type === 'lava') cell.life = 400 + Math.random() * 50;
     if (type === 'molten_glass') cell.life = 400 + Math.random() * 40;
     if (type === 'wet_sand') cell.life = 400 + Math.random() * 40;
-    if (type === 'uranium') cell.life = 600 + Math.random() * 40;
-    if (type === 'thorium') cell.life = 600 + Math.random() * 40;
-    if (type === 'radium') cell.life = 600 + Math.random() * 40;
-    if (type === 'radon') cell.life = 600 + Math.random() * 40;
-    if (type === 'blackhole') cell.color = '#898989'; 
+    if (type === 'uranium') cell.life = (1 + Math.random()) * 500;
+    if (type === 'thorium') cell.life = (1 + Math.random()) * 500;
+    if (type === 'radium') cell.life = (1 + Math.random()) * 500;
+    if (type === 'radon') cell.life = (1 + Math.random()) * 500;
+    if (type === 'blackhole') cell.color = '#898989';
+    if (type === 'magma') {
+        cell.color = (Math.random() < 0.2 ? '#ff5500' : '#303030');
+        cell.life = 400 + Math.random() * 50;
+    }
+    if (type === 'steam') cell.life = 500 + Math.random() * 40;
     
     grid[x][y] = cell;
 }
@@ -345,8 +354,28 @@ function update() {
                             if (grid[cx][cy].type === 'sand') {
                                 createElementAt(cx, cy, 'wet_sand');
                             }
+                            if (grid[cx][cy].type === 'magma') {
+                                createElementAt(x, y, 'steam');
+                            }
                         }
                     }
+                }
+            }
+
+            // --- STEAM ---
+            if (cell.type === 'steam') {
+                cell.life--;
+                if (cell.life <= 0) {
+                    createElementAt(x, y, 'water');
+                    continue;
+                }
+
+                let dx = Math.floor(Math.random() * 3) - 1;
+                let dy = Math.floor(Math.random() * 2) - 1; // 0 or -1
+                let nx = x + dx;
+                let ny = y + dy;
+                if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT && (grid[nx][ny] === 0 || grid[nx][ny].type === 'water') && Math.random() < 0.2) {
+                    swap(x, y, nx, ny);
                 }
             }
 
@@ -567,7 +596,7 @@ function update() {
                 if (cell.type === 'lava') {
                     cell.life--;
                     if (cell.life <= 0) {
-                        createElementAt(x, y, 'stone');
+                        createElementAt(x, y, 'magma');
                         continue;
                     }
                 }
@@ -611,7 +640,38 @@ function update() {
                             }
 
                             if (grid[cx][cy].type === 'water') {
-                                createElementAt(x, y, 'stone');
+                                createElementAt(x, y, 'magma');
+                            }
+                        }
+                    }
+                }
+            }
+
+            // --- MAGMA ---
+
+            if (cell.type === 'magma') {
+                
+                cell.life--;
+                if (cell.life <= 0) {
+                    createElementAt(x, y, 'stone');
+                    continue;
+                }
+
+                // Ignite Gunpowder nearby
+                for (let sx = -1; sx <= 1; sx++) {
+                    for (let sy = -1; sy <= 1; sy++) {
+                        let cx = x + sx;
+                        let cy = y + sy;
+                        if (cx >= 0 && cx < WIDTH && cy >= 0 && cy < HEIGHT && grid[cx][cy]) {
+                            
+                            // Burn away grass/flowers
+                            if (grid[cx][cy].type === 'grass' || grid[cx][cy].type === 'flower' || grid[cx][cy].type === 'grass_seed' || grid[cx][cy].type === 'flower_seed' || grid[cx][cy].type === 'tree') {
+                                grid[cx][cy] = { type: 'fire', color: '#ff4500', life: 15 };
+                            }
+
+                            // Melt sand & glass
+                            if (grid[cx][cy].type === 'glass' || grid[cx][cy].type === 'sand') {
+                                createElementAt(cx, cy, 'molten_glass');
                             }
                         }
                     }
