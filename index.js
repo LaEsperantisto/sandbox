@@ -1,4 +1,4 @@
-const DEBUG = false;
+const DEBUG = true;
 
 const canvas = document.getElementById('sandbox');
 const ctx = canvas.getContext('2d');
@@ -198,8 +198,18 @@ resetBtn.addEventListener('click', () => {
 function draw(e) {
     if (!isDrawing) return;
     const rect = canvas.getBoundingClientRect();
-    const mouseX = Math.floor((e.clientX - rect.left) / CELL_SIZE);
-    const mouseY = Math.floor((e.clientY - rect.top) / CELL_SIZE);
+    
+    // 1. Get exact cursor position inside the canvas HTML element space
+    const canvasX = e.clientX - rect.left;
+    const canvasY = e.clientY - rect.top;
+    
+    // 2. Adjust for CSS scaling or custom dimensions, converting to internal pixel scale
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    // 3. Map the true canvas coordinates onto your engine's internal physics grid
+    const mouseX = Math.floor((canvasX * scaleX) / CELL_SIZE);
+    const mouseY = Math.floor((canvasY * scaleY) / CELL_SIZE);
 
     for (let x = -brushSize + 1; x < brushSize; x++) {
         for (let y = -brushSize + 1; y < brushSize; y++) {
@@ -449,6 +459,7 @@ function update() {
                     continue;
                 }
 
+                
                 if (y + 1 < HEIGHT && grid[x][y + 1] === 0) {
                     swap(x, y, x, y + 1);
                 } else {
@@ -729,7 +740,7 @@ function update() {
             // --- GRASS GROWTH ---
             if (cell.type === 'grass') {
                 if (cell.length < 5 && Math.random() < 0.02) {
-                    if (y - 1 >= 0 && grid[x][y - 1] === 0) {
+                    if (y - 1 >= 0 && (grid[x][y - 1] === 0 || grid[x][y - 1].type === 'grass_seed')) {
                         grid[x][y - 1] = { type: 'grass', color: '#2eb32e', length: cell.length + 1 };
                     }
                 }
@@ -737,9 +748,9 @@ function update() {
 
             // --- FLOWER SEED ---
             if (cell.type === 'flower_seed') {
-                if (y + 1 < HEIGHT && (grid[x][y + 1] === 0 || grid[x][y - 1].type === 'flower_seed' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
+                if (y + 1 < HEIGHT && (grid[x][y + 1] === 0 || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
                     swap(x, y, x, y + 1);
-                } else if (y + 1 < HEIGHT && (grid[x][y + 1].type === 'soil' || grid[x][y - 1].type === 'flower_seed' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
+                } else if (y + 1 < HEIGHT && (grid[x][y + 1].type === 'soil' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
                     // Initiate multi-pixel stem growth
                     grid[x][y] = { type: 'flower', part: 'stem', length: 1, color: '#64bd64' };
                 }
@@ -748,7 +759,7 @@ function update() {
             // --- FLOWER STRUCTURAL GROWTH ---
             if (cell.type === 'flower' && cell.part === 'stem') {
                 if (cell.length < 7) {
-                    if (Math.random() < 0.05 && y - 1 >= 0 && (grid[x][y - 1] === 0 || grid[x][y - 1].type === 'flower_seed' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
+                    if (Math.random() < 0.05 && y - 1 >= 0 && (grid[x][y - 1] === 0 || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer' || grid[x][y + 1].type === 'flower_seed')) {
                         grid[x][y - 1] = { type: 'flower', part: 'stem', length: cell.length + 1, color: '#64bd64' };
                         // Convert old stem pixel to static flower stem color to halt its logic loop
                         cell.part = 'done_stem'; 
@@ -762,9 +773,9 @@ function update() {
 
             // --- TREE SEED ---
             if (cell.type === 'tree_seed') {
-                if (y + 1 < HEIGHT && (grid[x][y + 1] === 0 || grid[x][y - 1].type === 'tree_seed' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
+                if (y + 1 < HEIGHT && (grid[x][y + 1] === 0 || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
                     swap(x, y, x, y + 1);
-                } else if (y + 1 < HEIGHT && (grid[x][y + 1].type === 'soil' || grid[x][y - 1].type === 'tree_seed' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
+                } else if (y + 1 < HEIGHT && (grid[x][y + 1].type === 'soil' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
                     // Initiate multi-pixel stem growth
                     grid[x][y] = { type: 'tree', part: 'trunk', length: 1, color: '#9f3d00' };
                 }
@@ -772,7 +783,7 @@ function update() {
 
             // --- TREE STRUCTURAL GROWTH ---
             if (cell.type === 'tree' && cell.part === 'trunk') {
-                if (cell.length < 10) {
+                if (cell.length < 20) {
                     if (Math.random() < 0.05 && y - 1 >= 0 && (grid[x][y - 1] === 0 || grid[x][y - 1].type === 'tree_seed' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
                         grid[x][y - 1] = { type: 'tree', part: 'trunk', length: cell.length + 1, color: '#9f3d00' };
                         // Convert old stem pixel to static flower stem color to halt its logic loop
@@ -795,7 +806,7 @@ function swap(x1, y1, x2, y2) {
 }
 
 function explode(x, y) {
-    const radius = 6;
+    const radius = 20;
     for (let dx = -radius; dx <= radius; dx++) {
         for (let dy = -radius; dy <= radius; dy++) {
             if (Math.sqrt(dx*dx + dy*dy) <= radius) {
@@ -855,7 +866,15 @@ function growLeaves(x, y) {
         {dx: 0, dy: -1}, {dx: -1, dy: -1}, {dx: 1, dy: -1}, {dx: -2, dy: -1}, {dx: 2, dy: -1},
         {dx: -2, dy: 0}, {dx: -1, dy: 0},  {dx: 0, dy: 0},   {dx: 1, dy: 0},  {dx: 2, dy: 0},
         {dx: 0, dy: 1},  {dx: -1, dy: 1},  {dx: 1, dy: 1},  {dx: -2, dy: 1},  {dx: 2, dy: 1},
-        {dx: 0, dy: 2},  {dx: -1, dy: 2},  {dx: 1, dy: 2}
+        { dx: 0, dy: 2 }, { dx: -1, dy: 2 }, { dx: 1, dy: 2 },
+        {dx: 0, dy: -3}, {dx: -1, dy: -3}, {dx: 1, dy: -3}, {dx: -3, dy: -3}, {dx: 3, dy: -3},
+        {dx: -3, dy: -1}, {dx: 3, dy: -1},
+        {dx: -3, dy: 0},
+        {dx: -3, dy: 1},  {dx: 3, dy: 1},
+        { dx: 0, dy: 3 }, { dx: -1, dy: 3 }, { dx: 1, dy: 3 }, { dx: -2, dy: -3 }, { dx: 2, dy: -3 },
+        { dx: -3, dy: -2 }, { dx: 3, dy: -2 }, { dx: 3, dy: 0 }, { dx: 2, dy: 3 }, { dx: -2, dy: 3 }, { dx: 1, dy: 3 },
+        { dx: -1, dy: 3 }, { dx: 3, dy: 3 }, { dx: -3, dy: 3 }, { dx: 2, dy: 2 }, { dx: -2, dy: 2 }, 
+        { dx: 3, dy: 2 }, { dx: -3, dy: 2}, 
     ];
 
     leaves.forEach(p => {
