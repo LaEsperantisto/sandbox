@@ -72,6 +72,24 @@ function update_element_buttons() {
         });
         btnGrid.appendChild(btn);
     });
+
+    Object.keys(ELEMENTS).forEach(key => {
+        if (!shown_elements.hasOwnProperty(key)) {
+            const btn = document.createElement('button');
+            btn.disabled = true;
+            btn.innerText = ELEMENTS[key].name;
+            btn.style.backgroundColor = (ELEMENTS[key].color === '#000000' ? '#333' : ELEMENTS[key].color);
+            btn.style.backgroundColor = `rgb(${btn.style.backgroundColor.r / 1.5}, ${btn.style.backgroundColor.g / 1.5}, ${btn.style.backgroundColor.b / 1.5})`
+            btn.dataset.type = key;
+            if (key === currentElement) btn.classList.add('active');
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.btn-grid button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentElement = key;
+            });
+            btnGrid.appendChild(btn);
+        }
+    });
 }
 
 update_element_buttons();
