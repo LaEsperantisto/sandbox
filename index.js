@@ -1,4 +1,4 @@
-const DEBUG = true;
+const DEBUG = false;
 
 const canvas = document.getElementById('sandbox');
 const ctx = canvas.getContext('2d');
