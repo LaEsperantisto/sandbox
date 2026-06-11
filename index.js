@@ -6,6 +6,7 @@ const brushSlider = document.getElementById('brush-slider');
 const brushVal = document.getElementById('brush-val');
 const clearBtn = document.getElementById('clear-btn');
 const pauseBtn = document.getElementById('pause-btn');
+const resetBtn = document.getElementById('reset-btn');
 const btnGrid = document.getElementById('element-buttons');
 const debugVal = document.getElementById('DEBUG');
 
@@ -50,7 +51,8 @@ let DISCOVERABLE_ELEMENTS = {
     magma:      { name: 'Magma', color: '#ff5500'},
 }
 
-let shown_elements = {
+// Default unlocked elements if no save data exists
+const DEFAULT_SHOWN_ELEMENTS = {
     eraser:     { name: 'Eraser', color: '#000000' },
     lava:       { name: 'Lava', color: '#ff7520' },
     sand:       { name: 'Sand', color: '#e0c068' },
@@ -60,8 +62,12 @@ let shown_elements = {
     blackhole:  { name: 'Black Hole', color: '#898989' },
     gunpowder:  { name: 'Gunpowder', color: '#555555' },
     fertilizer: { name: 'Fertilizer', color: '#d3d3d3' },
-    uranium:    { name: 'Uranium', color: '#5fbf1b'},
-}
+    uranium:    { name: 'Uranium', color: '#5fbf1b'}
+};
+
+// Check cache for a save state, otherwise fall back to the defaults
+let savedData = localStorage.getItem('sandbox_shown_elements');
+let shown_elements = savedData ? JSON.parse(savedData) : DEFAULT_SHOWN_ELEMENTS;
 
 // Element Configuration Matrix
 const ELEMENTS = {
@@ -158,6 +164,37 @@ pauseBtn.addEventListener('click', () => {
     toggleRunning();
 });
 
+resetBtn.addEventListener('click', () => {
+    // Confirm with the player before wiping progress
+    if (confirm("Are you sure you want to reset your discovered elements? This will clear your save cache.")) {
+        
+        // Remove the data from localStorage
+        localStorage.removeItem('sandbox_shown_elements');
+        
+        // Reset the runtime object back to defaults (matching your initial list)
+        shown_elements = {
+            eraser:     { name: 'Eraser', color: '#000000' },
+            lava:       { name: 'Lava', color: '#ff7520' },
+            sand:       { name: 'Sand', color: '#e0c068' },
+            water:      { name: 'Water', color: '#4080ff' },
+            soil:       { name: 'Soil', color: '#553b1b' },
+            acid:       { name: 'Acid', color: '#00ff33' },
+            blackhole:  { name: 'Black Hole', color: '#898989' },
+            gunpowder:  { name: 'Gunpowder', color: '#555555' },
+            fertilizer: { name: 'Fertilizer', color: '#d3d3d3' },
+            uranium:    { name: 'Uranium', color: '#5fbf1b'}
+        };
+        
+        // Default the current selected brush element back to sand
+        currentElement = 'sand';
+        
+        // Re-render the element selector menu
+        update_element_buttons();
+        
+        console.log('Cache cleared and elements reset.');
+    }
+});
+
 function draw(e) {
     if (!isDrawing) return;
     const rect = canvas.getBoundingClientRect();
@@ -193,6 +230,8 @@ function addElement(type) {
         // Refresh the UI button list to display the new button
         update_element_buttons();
         console.log('Discovered ' + type + ' element.')
+
+        saveData();
     }
 }
 
@@ -861,6 +900,16 @@ function adjustBrightness(hex, percent) {
     G = Math.min(255, Math.max(0, G + percent));
     B = Math.min(255, Math.max(0, B + percent));
     return `rgb(${R},${G},${B})`;
+}
+
+
+function saveData() {
+    try {
+        localStorage.setItem('sandbox_shown_elements', JSON.stringify(shown_elements));
+        if (DEBUG) console.log('Progress saved successfully!');
+    } catch (error) {
+        console.error('Failed to save data to cache:', error);
+    }
 }
 
 function loop() {
