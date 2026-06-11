@@ -1,3 +1,5 @@
+const DEBUG = true;
+
 const canvas = document.getElementById('sandbox');
 const ctx = canvas.getContext('2d');
 const brushSlider = document.getElementById('brush-slider');
@@ -29,7 +31,8 @@ let shown_elements = {
     acid:       { name: 'Acid', color: '#00ff33' },
     blackhole:  { name: 'Black Hole', color: '#898989' },
     gunpowder:  { name: 'Gunpowder', color: '#555555' },
-    fertilizer: { name: 'Fertilizer', color: '#d3d3d3'},
+    fertilizer: { name: 'Fertilizer', color: '#d3d3d3' },
+    uranium:    { name: 'Uranium', color: '#5fbf1b'},
 }
 
 // Element Configuration Matrix
@@ -53,33 +56,23 @@ const ELEMENTS = {
     glass:      { name: 'Glass', color: '#b2f9ff'},
     molten_glass:{ name: 'Molten Glass', color: '#f2ffb4' },
     wet_sand:   { name: 'Wet Sand', color: '#f8e65c'},
-    fertilizer: { name: 'Fertilizer', color: '#d3d3d3'},
+    fertilizer: { name: 'Fertilizer', color: '#d3d3d3' },
+    uranium:    { name: 'Uranium', color: '#5fbf1b'},
+    thorium:    { name: 'Thorium', color: '#bf9b1b'},
+    radium:     { name: 'Radium', color: '#14ebff'},
+    radon:      { name: 'Radon', color: '#d0d0d0'},
+    lead:       { name: 'Lead', color: '#919191'},
 };
 
 function update_element_buttons() {
     btnGrid.innerHTML = "";
-    // Generate UI Buttons
-    Object.keys(shown_elements).forEach(key => {
-        const btn = document.createElement('button');
-        btn.innerText = ELEMENTS[key].name;
-        btn.style.backgroundColor = ELEMENTS[key].color === '#000000' ? '#333' : ELEMENTS[key].color;
-        btn.dataset.type = key;
-        if (key === currentElement) btn.classList.add('active');
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.btn-grid button').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentElement = key;
-        });
-        btnGrid.appendChild(btn);
-    });
 
-    Object.keys(ELEMENTS).forEach(key => {
-        if (!shown_elements.hasOwnProperty(key)) {
+    if (!DEBUG) {
+        // Generate UI Buttons
+        Object.keys(shown_elements).forEach(key => {
             const btn = document.createElement('button');
-            btn.disabled = true;
             btn.innerText = ELEMENTS[key].name;
-            btn.style.backgroundColor = (ELEMENTS[key].color === '#000000' ? '#333' : ELEMENTS[key].color);
-            btn.style.backgroundColor = `rgb(${btn.style.backgroundColor.r / 1.5}, ${btn.style.backgroundColor.g / 1.5}, ${btn.style.backgroundColor.b / 1.5})`
+            btn.style.backgroundColor = ELEMENTS[key].color === '#000000' ? '#333' : ELEMENTS[key].color;
             btn.dataset.type = key;
             if (key === currentElement) btn.classList.add('active');
             btn.addEventListener('click', () => {
@@ -87,6 +80,30 @@ function update_element_buttons() {
                 btn.classList.add('active');
                 currentElement = key;
             });
+            btnGrid.appendChild(btn);
+        });
+    }
+
+    Object.keys(ELEMENTS).forEach(key => {
+        if (!shown_elements.hasOwnProperty(key) || DEBUG) {
+            const btn = document.createElement('button');
+            if (!DEBUG) btn.disabled = true;
+            btn.innerText = ELEMENTS[key].name;
+            
+            let baseColor = ELEMENTS[key].color === '#000000' ? '#333333' : ELEMENTS[key].color;
+            if (!DEBUG) btn.style.backgroundColor = adjustBrightness(baseColor, -60);
+            else btn.style.backgroundColor = baseColor;
+            
+            btn.dataset.type = key;
+            
+            if (key === currentElement) btn.classList.add('active');
+            
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.btn-grid button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentElement = key;
+            });
+            
             btnGrid.appendChild(btn);
         }
     });
@@ -137,7 +154,7 @@ function toggleRunning() {
 
 function addElement(type) {
 
-    if (['tree', 'flower', 'grass', 'molten_glass'].includes(type)) return;
+    if (['tree', 'flower', 'grass'].includes(type)) return;
     
     if (!(shown_elements[type])) {
         
@@ -169,6 +186,10 @@ function createElementAt(x, y, type) {
     if (type === 'lava') cell.life = 400 + Math.random() * 50;
     if (type === 'molten_glass') cell.life = 400 + Math.random() * 40;
     if (type === 'wet_sand') cell.life = 400 + Math.random() * 40;
+    if (type === 'uranium') cell.life = 600 + Math.random() * 40;
+    if (type === 'thorium') cell.life = 600 + Math.random() * 40;
+    if (type === 'radium') cell.life = 600 + Math.random() * 40;
+    if (type === 'radon') cell.life = 600 + Math.random() * 40;
     if (type === 'blackhole') cell.color = '#898989'; 
     
     grid[x][y] = cell;
@@ -235,15 +256,8 @@ function update() {
 
             // --- FERTILIZER ---
             if (cell.type === 'fertilizer') {
-                if (y + 1 < HEIGHT) {
-                    if (grid[x][y + 1] === 0 || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'acid') {
-                        swap(x, y, x, y + 1);
-                    } else if (x - 1 >= 0 && (grid[x - 1][y + 1] === 0 || grid[x - 1][y + 1].type === 'water') && Math.random() < 0.5) {
-                        swap(x, y, x - 1, y + 1);
-                    } else if (x + 1 < WIDTH && (grid[x + 1][y + 1] === 0 || grid[x + 1][y + 1].type === 'water')) {
-                        swap(x, y, x + 1, y + 1);
-                    }
-                }
+
+                let used = false;
 
                 for (let sx = -1; sx <= 1; sx++) {
                     for (let sy = -1; sy <= 1; sy++) {
@@ -251,6 +265,7 @@ function update() {
                         let cy = y + sy;
                         if (cx >= 0 && cx < WIDTH && cy >= 0 && cy < HEIGHT && grid[cx][cy]) {
                             if (grid[cx][cy].type === 'soil') {
+                                used = true;
                                 let seeds = ['tree_seed', 'flower_seed', 'grass_seed'];
                                 let i = Math.floor(Math.random() * seeds.length);
                                 let seed = seeds[i];
@@ -258,11 +273,22 @@ function update() {
                                 break;
                             }
                             
-                            if (grid[cx][cy].type === 'water') {
-                                grid[x][y] = 0;
-                                break;
+                            if (['water', 'tree_seed', 'flower_seed', 'grass_seed'].includes(grid[cx][cy].type)) {
+                                used = true;
                             }
                         }
+                    }
+                }
+
+                if (used) {
+                    grid[x][y] = 0;
+                } else if (y + 1 < HEIGHT) {
+                    if (grid[x][y + 1] === 0 || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'acid') {
+                        swap(x, y, x, y + 1);
+                    } else if (x - 1 >= 0 && (grid[x - 1][y + 1] === 0 || grid[x - 1][y + 1].type === 'water') && Math.random() < 0.5) {
+                        swap(x, y, x - 1, y + 1);
+                    } else if (x + 1 < WIDTH && (grid[x + 1][y + 1] === 0 || grid[x + 1][y + 1].type === 'water')) {
+                        swap(x, y, x + 1, y + 1);
                     }
                 }
             }
@@ -344,6 +370,85 @@ function update() {
                     }
                 }
             }
+
+            // --- URANIUM ---
+            if (cell.type === 'uranium') {
+                cell.life--;
+                if (cell.life <= 0) {
+                    createElementAt(x, y, 'thorium');
+                    continue;
+                }
+
+                if (y + 1 < HEIGHT) {
+                    if (grid[x][y + 1] === 0 || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'acid') {
+                        swap(x, y, x, y + 1);
+                    } else if (x - 1 >= 0 && (grid[x - 1][y + 1] === 0 || grid[x - 1][y + 1].type === 'water') && Math.random() < 0.5) {
+                        swap(x, y, x - 1, y + 1);
+                    } else if (x + 1 < WIDTH && (grid[x + 1][y + 1] === 0 || grid[x + 1][y + 1].type === 'water')) {
+                        swap(x, y, x + 1, y + 1);
+                    }
+                }
+            }
+
+            // --- THORIUM ---
+            if (cell.type === 'thorium') {
+                cell.life--;
+                if (cell.life <= 0) {
+                    createElementAt(x, y, 'radium');
+                    continue;
+                }
+
+                if (y + 1 < HEIGHT) {
+                    if (grid[x][y + 1] === 0 || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'acid') {
+                        swap(x, y, x, y + 1);
+                    } else if (x - 1 >= 0 && (grid[x - 1][y + 1] === 0 || grid[x - 1][y + 1].type === 'water') && Math.random() < 0.5) {
+                        swap(x, y, x - 1, y + 1);
+                    } else if (x + 1 < WIDTH && (grid[x + 1][y + 1] === 0 || grid[x + 1][y + 1].type === 'water')) {
+                        swap(x, y, x + 1, y + 1);
+                    }
+                }
+            }
+
+            // --- RADIUM ---
+            if (cell.type === 'radium') {
+                cell.life--;
+                if (cell.life <= 0) {
+                    createElementAt(x, y, 'radon');
+                    continue;
+                }
+
+                
+            }
+
+            // --- RADON ---
+            if (cell.type === 'radon') {
+                cell.life--;
+                if (cell.life <= 0) {
+                    createElementAt(x, y, 'lead');
+                    continue;
+                }
+
+                let dx = Math.floor(Math.random() * 3) - 1;
+                let dy = Math.floor(Math.random() * 2) - 1; // 0 or -1
+                let nx = x + dx;
+                let ny = y + dy;
+                if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT && grid[nx][ny] === 0 && Math.random() < 0.2) {
+                    swap(x, y, nx, ny);
+                }
+            }
+
+            // --- LEAD ---
+            if (cell.type === 'lead') {
+                let dx = Math.floor(Math.random() * 3) - 1;
+                let dy = Math.floor(Math.random() * 3) - 1;
+                let nx = x + dx;
+                let ny = y + dy;
+                if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT && grid[nx][ny].type === 'water' && Math.random() < 0.2) {
+                    swap(x, y, nx, ny);
+                }
+            }
+
+            
 
             // --- ACID ---
             if (cell.type === 'acid') {
@@ -488,7 +593,7 @@ function update() {
 
             // --- GRASS SEED ---
             if (cell.type === 'grass_seed') {
-                if (y + 1 < HEIGHT && (grid[x][y + 1] === 0 || grid[x][y + 1].type === 'grass_seed')) {
+                if (y + 1 < HEIGHT && (grid[x][y + 1] === 0 || grid[x][y + 1].type === 'grass_seed' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
                     swap(x, y, x, y + 1);
                 } else if (y + 1 < HEIGHT && grid[x][y + 1].type === 'soil') {
                     // Turn into grass blade
@@ -507,9 +612,9 @@ function update() {
 
             // --- FLOWER SEED ---
             if (cell.type === 'flower_seed') {
-                if (y + 1 < HEIGHT && (grid[x][y + 1] === 0 || grid[x][y - 1].type === 'flower_seed')) {
+                if (y + 1 < HEIGHT && (grid[x][y + 1] === 0 || grid[x][y - 1].type === 'flower_seed' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
                     swap(x, y, x, y + 1);
-                } else if (y + 1 < HEIGHT && (grid[x][y + 1].type === 'soil' || grid[x][y - 1].type === 'flower_seed')) {
+                } else if (y + 1 < HEIGHT && (grid[x][y + 1].type === 'soil' || grid[x][y - 1].type === 'flower_seed' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
                     // Initiate multi-pixel stem growth
                     grid[x][y] = { type: 'flower', part: 'stem', length: 1, color: '#64bd64' };
                 }
@@ -518,7 +623,7 @@ function update() {
             // --- FLOWER STRUCTURAL GROWTH ---
             if (cell.type === 'flower' && cell.part === 'stem') {
                 if (cell.length < 7) {
-                    if (Math.random() < 0.05 && y - 1 >= 0 && (grid[x][y - 1] === 0 || grid[x][y - 1].type === 'flower_seed')) {
+                    if (Math.random() < 0.05 && y - 1 >= 0 && (grid[x][y - 1] === 0 || grid[x][y - 1].type === 'flower_seed' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
                         grid[x][y - 1] = { type: 'flower', part: 'stem', length: cell.length + 1, color: '#64bd64' };
                         // Convert old stem pixel to static flower stem color to halt its logic loop
                         cell.part = 'done_stem'; 
@@ -532,9 +637,9 @@ function update() {
 
             // --- TREE SEED ---
             if (cell.type === 'tree_seed') {
-                if (y + 1 < HEIGHT && (grid[x][y + 1] === 0 || grid[x][y - 1].type === 'tree_seed')) {
+                if (y + 1 < HEIGHT && (grid[x][y + 1] === 0 || grid[x][y - 1].type === 'tree_seed' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
                     swap(x, y, x, y + 1);
-                } else if (y + 1 < HEIGHT && (grid[x][y + 1].type === 'soil' || grid[x][y - 1].type === 'tree_seed')) {
+                } else if (y + 1 < HEIGHT && (grid[x][y + 1].type === 'soil' || grid[x][y - 1].type === 'tree_seed' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
                     // Initiate multi-pixel stem growth
                     grid[x][y] = { type: 'tree', part: 'trunk', length: 1, color: '#9f3d00' };
                 }
@@ -543,7 +648,7 @@ function update() {
             // --- TREE STRUCTURAL GROWTH ---
             if (cell.type === 'tree' && cell.part === 'trunk') {
                 if (cell.length < 10) {
-                    if (Math.random() < 0.05 && y - 1 >= 0 && (grid[x][y - 1] === 0 || grid[x][y - 1].type === 'tree_seed')) {
+                    if (Math.random() < 0.05 && y - 1 >= 0 && (grid[x][y - 1] === 0 || grid[x][y - 1].type === 'tree_seed' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
                         grid[x][y - 1] = { type: 'tree', part: 'trunk', length: cell.length + 1, color: '#9f3d00' };
                         // Convert old stem pixel to static flower stem color to halt its logic loop
                         cell.part = 'done_trunk'; 
