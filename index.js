@@ -36,7 +36,6 @@ let DISCOVERABLE_ELEMENTS = {
     blackhole:  { name: 'Black Hole', color: '#898989' },
     acid:       { name: 'Acid', color: '#00ff33' },
     lava:       { name: 'Lava', color: '#ff7520' },
-    eternal_lava:{ name: 'Eternal Lava', color: '#ff7520'},
     stone:      { name: 'Stone', color: '#4d4c4c'},
     glass:      { name: 'Glass', color: '#b2f9ff'},
     molten_glass:{ name: 'Molten Glass', color: '#f2ffb4' },
