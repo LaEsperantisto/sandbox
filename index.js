@@ -16,7 +16,7 @@ const HEIGHT = canvas.height / CELL_SIZE;
 
 // Grid representation: 0 = Empty, or Object with {type, color, age, state, ...}
 let grid = Array(WIDTH).fill(null).map(() => Array(HEIGHT).fill(0));
-let new_grid = grid;
+let new_grid = Array(WIDTH).fill(null).map(() => Array(HEIGHT).fill(0));
 
 let currentElement = 'sand';
 let brushSize = 3;
@@ -59,7 +59,6 @@ const DEFAULT_SHOWN_ELEMENTS = [
   "lava",
   "water",
   "soil",
-  "acid",
   "blackhole",
   "gunpowder",
   "fertilizer",
@@ -117,7 +116,8 @@ const ELEMENTS = {
     radon:      { name: '💨 Radon', color: '#d0d0d0'},
     lead:       { name: '🔩 Lead', color: '#919191'},
     steam:      { name: '💨 Steam', color: '#bab7b7'},
-    barrier:    { name: '🚧 Barrier', color: '#000000'}
+    barrier:    { name: '🚧 Barrier', color: '#000000'},
+    electron:   { name: '⚛ Electron', color: '#008cff'},
 };
 
 function update_element_buttons() {
@@ -296,6 +296,7 @@ function createElementAt(x, y, type) {
     }
     if (type === 'steam') cell.life = 500 + Math.random() * 40;
     if (type === 'barrier') cell.color = (Math.random() < 0.5 ? '#ff0000' : '#ffffff');
+    if (type === 'electron') cell.direction = Math.floor(Math.random() * 8);
     
     new_grid[x][y] = cell;
 }
@@ -434,6 +435,11 @@ function update() {
                                     createElementAt(cx, cy, 'sand');
                                 }
                             }
+                            if (grid[cx][cy].type === 'thorium') {
+                                if (Math.random() > 0.999) {
+                                    createElementAt(cx, cy, 'acid');
+                                }
+                            }
                         }
                     }
                 }
@@ -441,7 +447,8 @@ function update() {
 
             // --- STEAM ---
             if (cell.type === 'steam') {
-                cell.life--;
+                try { new_grid[x][y].life--; }
+                catch (e) { }
                 if (cell.life <= 0) {
                     createElementAt(x, y, 'water');
                     continue;
@@ -458,7 +465,8 @@ function update() {
 
             // --- MOLTEN GLASS ---
             if (cell.type === 'molten_glass') {
-                cell.life--;
+                try { new_grid[x][y].life--; }
+                catch (e) { }
                 if (cell.life <= 0) {
                     createElementAt(x, y, 'glass');
                     continue;
@@ -494,7 +502,8 @@ function update() {
 
             // --- WET SAND ---
             if (cell.type === 'wet_sand') {
-                cell.life--;
+                try { new_grid[x][y].life--; }
+                catch (e) { }
                 if (cell.life <= 0) {
                     createElementAt(x, y, 'brick');
                     continue;
@@ -519,7 +528,8 @@ function update() {
 
             // --- URANIUM ---
             if (cell.type === 'uranium') {
-                cell.life--;
+                try { new_grid[x][y].life--; }
+                catch (e) { }
                 if (cell.life <= 0) {
                     createElementAt(x, y, 'thorium');
                     continue;
@@ -538,7 +548,8 @@ function update() {
 
             // --- THORIUM ---
             if (cell.type === 'thorium') {
-                cell.life--;
+                try { new_grid[x][y].life--; }
+                catch (e) { }
                 if (cell.life <= 0) {
                     createElementAt(x, y, 'radium');
                     continue;
@@ -557,7 +568,8 @@ function update() {
 
             // --- RADIUM ---
             if (cell.type === 'radium') {
-                cell.life--;
+                try { new_grid[x][y].life--; }
+                catch (e) { }
                 if (cell.life <= 0) {
                     createElementAt(x, y, 'radon');
                     continue;
@@ -568,7 +580,8 @@ function update() {
 
             // --- RADON ---
             if (cell.type === 'radon') {
-                cell.life--;
+                try { new_grid[x][y].life--; }
+                catch (e) { }
                 if (cell.life <= 0) {
                     createElementAt(x, y, 'lead');
                     continue;
@@ -599,7 +612,7 @@ function update() {
             // --- ACID ---
             if (cell.type === 'acid') {
                 // Dissolves things below it
-                undisolvables = ['acid', 'blackhole', 'glass', 'barrier'];
+                undisolvables = ['acid', 'blackhole', 'glass', 'barrier', 'water', 'thorium'];
                 if (y + 1 < HEIGHT && grid[x][y + 1] !== 0 && !undisolvables.includes(grid[x][y + 1].type)) {
                     new_grid[x][y + 1] = 0;
                     new_grid[x][y] = 0; // Acid consumes itself
@@ -646,7 +659,8 @@ function update() {
 
             // --- FIRE / EXPLOSION ---
             if (cell.type === 'fire') {
-                cell.life--;
+                try { new_grid[x][y].life--; }
+                catch (e) { }
                 if (cell.life <= 0) {
                     new_grid[x][y] = 0;
                     continue;
@@ -685,7 +699,8 @@ function update() {
 
             if (cell.type === 'lava' || cell.type === 'eternal_lava') {
                 if (cell.type === 'lava') {
-                    cell.life--;
+                    try { new_grid[x][y].life--; }
+                    catch (e) { }
                     if (cell.life <= 0) {
                         createElementAt(x, y, 'magma');
                         continue;
@@ -742,7 +757,8 @@ function update() {
 
             if (cell.type === 'magma') {
                 
-                cell.life--;
+                try { new_grid[x][y].life--; }
+                catch (e) { }
                 if (cell.life <= 0) {
                     createElementAt(x, y, 'stone');
                     continue;
@@ -837,14 +853,69 @@ function update() {
                     cell.part = 'done_trunk';
                 }
             }
+
+            // --- ELECTRON ---
+            if (cell.type === 'electron') {
+                let new_x;
+                let new_y;
+                switch (cell.direction) {
+                    case 0:
+                        new_x = x + 1;
+                        new_y = y;
+                        break;
+                    case 1:
+                        new_x = x - 1;
+                        new_y = y;
+                        break;
+                    case 2:
+                        new_x = x;
+                        new_y = y + 1;
+                        break;
+                    case 3:
+                        new_x = x;
+                        new_y = y - 1;
+                        break;
+                    case 4:
+                        new_x = x + 1;
+                        new_y = y - 1;
+                        break;
+                    case 5:
+                        new_x = x - 1;
+                        new_y = y + 1;
+                        break;
+                    case 6:
+                        new_x = x + 1;
+                        new_y = y + 1;
+                        break;
+                    case 7:
+                        new_x = x - 1;
+                        new_y = y - 1;
+                        break;
+                }
+                if (new_x > 0 && new_x < WIDTH && new_y > 0 && new_y < HEIGHT) {
+                    swap(x, y, new_x, new_y);
+                }
+            }
         }
     }
 }
 
+let already_swapped_cells = [];
+
 function swap(x1, y1, x2, y2) {
-    let temp = grid[x1][y1];
-    new_grid[x1][y1] = grid[x2][y2];
-    new_grid[x2][y2] = temp;
+    let cell1 = grid[x1][y1];
+    let cell2 = grid[x2][y2];
+
+    if (
+        already_swapped_cells.some(cell => cell.x === x1 && cell.y === y1) || 
+        already_swapped_cells.some(cell => cell.x === x2 && cell.y === y2)
+    ) return;
+
+    new_grid[x1][y1] = cell2;
+    new_grid[x2][y2] = cell1;
+
+    already_swapped_cells.push({ x: x1, y: y1 });
+    already_swapped_cells.push({ x: x2, y: y2 });
 }
 
 function explode(x, y) {
@@ -975,13 +1046,15 @@ function saveData() {
 
 function loop() {
     if (running) {
-        new_grid = grid;
+        already_swapped_cells = [];
+        new_grid = grid.map(col => col.map(cell => cell ? { ...cell } : 0));
         update();
         grid = new_grid;
     }
+
     render();
-    requestAnimationFrame(loop);
 }
 
 // Kick off the sandbox
-loop();
+setInterval(loop, 20);
+requestAnimationFrame(loop);
