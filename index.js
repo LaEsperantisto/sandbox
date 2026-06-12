@@ -68,7 +68,25 @@ const DEFAULT_SHOWN_ELEMENTS = [
 
 // Check cache for a save state, otherwise fall back to the defaults
 let savedData = localStorage.getItem('sandbox_shown_elements');
-let shown_elements = savedData ? JSON.parse(savedData) : DEFAULT_SHOWN_ELEMENTS;
+let shown_elements = DEFAULT_SHOWN_ELEMENTS;
+
+if (savedData) {
+    try {
+        let parsed = JSON.parse(savedData);
+        
+        // Check if the cached data is a proper Array
+        if (Array.isArray(parsed)) {
+            shown_elements = parsed;
+        } else {
+            // It's the old dictionary format! Convert it to an array or clear it:
+            console.warn("Old cache format detected. Resetting to defaults.");
+            localStorage.removeItem('sandbox_shown_elements'); 
+        }
+    } catch (e) {
+        console.error("Error parsing save data:", e);
+        localStorage.removeItem('sandbox_shown_elements');
+    }
+}
 
 // Element Configuration Matrix
 const ELEMENTS = {
