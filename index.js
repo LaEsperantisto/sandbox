@@ -16,6 +16,7 @@ const HEIGHT = canvas.height / CELL_SIZE;
 
 // Grid representation: 0 = Empty, or Object with {type, color, age, state, ...}
 let grid = Array(WIDTH).fill(null).map(() => Array(HEIGHT).fill(0));
+let new_grid = grid;
 
 let currentElement = 'sand';
 let brushSize = 3;
@@ -23,48 +24,47 @@ let isDrawing = false;
 let running = true;
 pauseBtn.classList.toggle('running', running);
 
-let DISCOVERABLE_ELEMENTS = {
-    eraser:     { name: 'Eraser', color: '#000000' },
-    brick:      { name: 'Brick', color: '#888888' },
-    sand:       { name: 'Sand', color: '#e0c068' },
-    water:      { name: 'Water', color: '#4080ff' },
-    soil:       { name: 'Soil', color: '#553b1b' },
-    grass_seed: { name: 'Grass Seed', color: '#77cc44' },
-    flower_seed:{ name: 'Flower Seed', color: '#ff66cc' },
-    tree_seed:  { name: 'Tree Seed', color: '#a14b00'},
-    fire:       { name: 'Fire', color: '#ff4500' },
-    gunpowder:  { name: 'Gunpowder', color: '#555555' },
-    blackhole:  { name: 'Black Hole', color: '#898989' },
-    acid:       { name: 'Acid', color: '#00ff33' },
-    lava:       { name: 'Lava', color: '#ff7520' },
-    stone:      { name: 'Stone', color: '#4d4c4c'},
-    glass:      { name: 'Glass', color: '#b2f9ff'},
-    molten_glass:{ name: 'Molten Glass', color: '#f2ffb4' },
-    wet_sand:   { name: 'Wet Sand', color: '#f8e65c'},
-    fertilizer: { name: 'Fertilizer', color: '#d3d3d3' },
-    uranium:    { name: 'Uranium', color: '#5fbf1b'},
-    thorium:    { name: 'Thorium', color: '#bf9b1b'},
-    radium:     { name: 'Radium', color: '#14ebff'},
-    radon:      { name: 'Radon', color: '#d0d0d0'},
-    lead:       { name: 'Lead', color: '#919191'},
-    steam:      { name: 'Steam', color: '#bab7b7'},
-    magma:      { name: 'Magma', color: '#ff5500'},
-}
+let DISCOVERABLE_ELEMENTS = [
+    'eraser',
+    'brick',
+    'sand',
+    'water',
+    'soil',
+    'grass_seed',
+    'flower_seed',
+    'tree_seed',
+    'fire',
+    'gunpowder',
+    'blackhole',
+    'acid',
+    'lava',
+    'stone',
+    'glass',
+    'molten_glass',
+    'wet_sand',
+    'fertilizer',
+    'uranium',
+    'thorium',
+    'radium',
+    'radon',
+    'lead',
+    'steam',
+    'magma'
+]
 
 // Default unlocked elements if no save data exists
-const DEFAULT_SHOWN_ELEMENTS = {
-    eraser:     { name: 'Eraser', color: '#000000' },
-    barrier:    { name: 'Barrier', color: '#000000'},
-    lava:       { name: 'Lava', color: '#ff7520' },
-    sand:       { name: 'Sand', color: '#e0c068' },
-    water:      { name: 'Water', color: '#4080ff' },
-    soil:       { name: 'Soil', color: '#553b1b' },
-    acid:       { name: 'Acid', color: '#00ff33' },
-    blackhole:  { name: 'Black Hole', color: '#898989' },
-    gunpowder:  { name: 'Gunpowder', color: '#555555' },
-    fertilizer: { name: 'Fertilizer', color: '#d3d3d3' },
-    uranium:    { name: 'Uranium', color: '#5fbf1b'}
-};
+const DEFAULT_SHOWN_ELEMENTS = [
+  "eraser",
+  "barrier",
+  "lava",
+  "water",
+  "soil",
+  "acid",
+  "blackhole",
+  "gunpowder",
+  "fertilizer",
+  "uranium"
+];
 
 // Check cache for a save state, otherwise fall back to the defaults
 let savedData = localStorage.getItem('sandbox_shown_elements');
@@ -72,97 +72,92 @@ let shown_elements = savedData ? JSON.parse(savedData) : DEFAULT_SHOWN_ELEMENTS;
 
 // Element Configuration Matrix
 const ELEMENTS = {
-    eraser:     { name: 'Eraser', color: '#000000' },
-    brick:      { name: 'Brick', color: '#888888' },
-    sand:       { name: 'Sand', color: '#e0c068' },
-    water:      { name: 'Water', color: '#4080ff' },
-    soil:       { name: 'Soil', color: '#553b1b' },
-    grass_seed: { name: 'Grass Seed', color: '#77cc44' },
-    flower_seed:{ name: 'Flower Seed', color: '#ff66cc' },
-    tree_seed:  { name: 'Tree Seed', color: '#a14b00'},
-    fire:       { name: 'Fire', color: '#ff4500' },
-    gunpowder:  { name: 'Gunpowder', color: '#555555' },
-    blackhole:  { name: 'Black Hole', color: '#898989' },
-    acid:       { name: 'Acid', color: '#00ff33' },
-    spout:      { name: 'Water Spout', color: '#00ffff' },
-    lava:       { name: 'Lava', color: '#ff7520' },
-    eternal_lava:{ name: 'Eternal Lava', color: '#ff7520'},
-    stone:      { name: 'Stone', color: '#4d4c4c'},
-    magma:      { name: 'Magma', color: '#ff5500'},
-    glass:      { name: 'Glass', color: '#b2f9ff'},
-    molten_glass:{ name: 'Molten Glass', color: '#f2ffb4' },
-    wet_sand:   { name: 'Wet Sand', color: '#f8e65c'},
-    fertilizer: { name: 'Fertilizer', color: '#d3d3d3' },
-    uranium:    { name: 'Uranium', color: '#5fbf1b'},
-    thorium:    { name: 'Thorium', color: '#bf9b1b'},
-    radium:     { name: 'Radium', color: '#14ebff'},
-    radon:      { name: 'Radon', color: '#d0d0d0'},
-    lead:       { name: 'Lead', color: '#919191'},
-    steam:      { name: 'Steam', color: '#bab7b7'},
-    barrier:    { name: 'Barrier', color: '#000000'}
+    eraser:     { name: '🧽 Eraser', color: '#000000' },
+    brick:      { name: '🧱 Brick', color: '#888888' },
+    sand:       { name: '⏳ Sand', color: '#e0c068' },
+    water:      { name: '💧 Water', color: '#4080ff' },
+    soil:       { name: '🟫 Soil', color: '#553b1b' },
+    grass_seed: { name: '🌱 Grass Seed', color: '#77cc44' },
+    flower_seed:{ name: '🌸 Flower Seed', color: '#ff66cc' },
+    tree_seed:  { name: '🌳 Tree Seed', color: '#a14b00'},
+    fire:       { name: '🔥 Fire', color: '#ff4500' },
+    gunpowder:  { name: '💣 Gunpowder', color: '#555555' },
+    blackhole:  { name: '🕳️ Black Hole', color: '#898989' },
+    acid:       { name: '🧪 Acid', color: '#00ff33' },
+    spout:      { name: '🚰 Water Spout', color: '#00ffff' },
+    lava:       { name: '🌋 Lava', color: '#ff7520' },
+    eternal_lava:{ name: '♾️🌋 Eternal Lava', color: '#ff7520'},
+    stone:      { name: '🪨 Stone', color: '#4d4c4c'},
+    magma:      { name: '💥 Magma', color: '#ff5500'},
+    glass:      { name: '💎 Glass', color: '#b2f9ff'},
+    molten_glass:{ name: '🫠 Molten Glass', color: '#f2ffb4' },
+    wet_sand:   { name: '🏖️ Wet Sand', color: '#f8e65c'},
+    fertilizer: { name: '💩 Fertilizer', color: '#d3d3d3' },
+    uranium:    { name: '☢️ Uranium', color: '#5fbf1b'},
+    thorium:    { name: '🔋 Thorium', color: '#bf9b1b'},
+    radium:     { name: '✨ Radium', color: '#14ebff'},
+    radon:      { name: '💨 Radon', color: '#d0d0d0'},
+    lead:       { name: '🔩 Lead', color: '#919191'},
+    steam:      { name: '💨 Steam', color: '#bab7b7'},
+    barrier:    { name: '🚧 Barrier', color: '#000000'}
 };
 
 function update_element_buttons() {
     btnGrid.innerHTML = "";
 
     if (!DEBUG) {
-        // Generate UI Buttons
-        Object.keys(shown_elements).forEach(key => {
+        shown_elements.forEach(key => {
+            if (!ELEMENTS[key]) return; 
+
             const btn = document.createElement('button');
             btn.innerText = ELEMENTS[key].name;
             btn.style.backgroundColor = ELEMENTS[key].color === '#000000' ? '#333' : ELEMENTS[key].color;
             btn.dataset.type = key;
             if (key === currentElement) btn.classList.add('active');
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.btn-grid button').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('#element-buttons button').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentElement = key;
             });
             btnGrid.appendChild(btn);
         });
-    }
 
-    if (!DEBUG) Object.keys(DISCOVERABLE_ELEMENTS).forEach(key => {
-        if (!shown_elements.hasOwnProperty(key) || DEBUG) {
-            const btn = document.createElement('button');
-            btn.disabled = true;
-            btn.innerText = ELEMENTS[key].name;
+        DISCOVERABLE_ELEMENTS.forEach(key => {
             
-            let baseColor = ELEMENTS[key].color === '#000000' ? '#333333' : ELEMENTS[key].color;
-            btn.style.backgroundColor = adjustBrightness(baseColor, -60);
-            
-            
-            btn.dataset.type = key;
-            
-            if (key === currentElement) btn.classList.add('active');
-            
-            btnGrid.appendChild(btn);
-        }
-    });
-
-    else Object.keys(ELEMENTS).forEach(key => {
-        if (!shown_elements.hasOwnProperty(key) || DEBUG) {
+            if (!shown_elements.includes(key) && ELEMENTS[key]) {
+                const btn = document.createElement('button');
+                btn.disabled = true;
+                btn.innerText = ELEMENTS[key].name;
+                
+                let baseColor = ELEMENTS[key].color === '#000000' ? '#333333' : ELEMENTS[key].color;
+                btn.style.backgroundColor = adjustBrightness(baseColor, -60);
+                btn.dataset.type = key;
+                
+                btnGrid.appendChild(btn);
+            }
+        });
+    } else {
+        
+        Object.keys(ELEMENTS).forEach(key => {
             const btn = document.createElement('button');
             btn.innerText = ELEMENTS[key].name;
             
             let baseColor = ELEMENTS[key].color === '#000000' ? '#333333' : ELEMENTS[key].color;
             btn.style.backgroundColor = baseColor;
-            
             btn.dataset.type = key;
             
             if (key === currentElement) btn.classList.add('active');
             
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.btn-grid button').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('#element-buttons button').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentElement = key;
             });
             
             btnGrid.appendChild(btn);
-        }
-    });
+        });
+    }
 }
-
 update_element_buttons();
 // Event Listeners for Drawing
 canvas.addEventListener('mousedown', (e) => { isDrawing = true; draw(e); });
@@ -238,11 +233,11 @@ function toggleRunning() {
 
 function addElement(type) {
 
-    if (['tree', 'flower', 'grass'].includes(type)) return;
+    if (!DISCOVERABLE_ELEMENTS.includes(type)) return;
     
-    if (!(shown_elements[type])) {
+    if (!shown_elements.includes(type)) {
         
-        shown_elements[type] = ELEMENTS[type];
+        shown_elements.push(type);
         
         // Refresh the UI button list to display the new button
         update_element_buttons();
@@ -256,7 +251,7 @@ function createElementAt(x, y, type) {
     addElement(type);
 
     if (type === 'eraser') {
-        grid[x][y] = 0;
+        new_grid[x][y] = 0;
         return;
     }
     
@@ -284,7 +279,7 @@ function createElementAt(x, y, type) {
     if (type === 'steam') cell.life = 500 + Math.random() * 40;
     if (type === 'barrier') cell.color = (Math.random() < 0.5 ? '#ff0000' : '#ffffff');
     
-    grid[x][y] = cell;
+    new_grid[x][y] = cell;
 }
 
 // Main Physics Engine loop
@@ -311,7 +306,7 @@ function update() {
                         let ny = y + dy;
                         if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT) {
                             if (grid[nx][ny] && grid[nx][ny].type !== 'blackhole') {
-                                grid[nx][ny] = 0; 
+                                new_grid[nx][ny] = 0; 
                             }
                         }
                     }
@@ -339,11 +334,11 @@ function update() {
             // --- SAND ---
             if (cell.type === 'sand') {
                 if (y + 1 < HEIGHT) {
-                    if (grid[x][y + 1] === 0 || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'acid') {
+                    if (grid[x][y + 1] === 0 ) {
                         swap(x, y, x, y + 1);
-                    } else if (x - 1 >= 0 && (grid[x - 1][y + 1] === 0 || grid[x - 1][y + 1].type === 'water') && Math.random() < 0.5) {
+                    } else if (x - 1 >= 0 && grid[x - 1][y + 1] === 0 && Math.random() < 0.5) {
                         swap(x, y, x - 1, y + 1);
-                    } else if (x + 1 < WIDTH && (grid[x + 1][y + 1] === 0 || grid[x + 1][y + 1].type === 'water')) {
+                    } else if (x + 1 < WIDTH && grid[x + 1][y + 1] === 0) {
                         swap(x, y, x + 1, y + 1);
                     }
                 }
@@ -376,7 +371,7 @@ function update() {
                 }
 
                 if (used) {
-                    grid[x][y] = 0;
+                    new_grid[x][y] = 0;
                 } else if (y + 1 < HEIGHT) {
                     if (grid[x][y + 1] === 0 || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'acid') {
                         swap(x, y, x, y + 1);
@@ -415,6 +410,11 @@ function update() {
                             }
                             if (grid[cx][cy].type === 'magma' || grid[cx][cy].type === 'fire') {
                                 createElementAt(x, y, 'steam');
+                            }
+                            if (grid[cx][cy].type === 'stone' || grid[cx][cy].type === 'brick') {
+                                if (Math.random() > 0.999) {
+                                    createElementAt(cx, cy, 'sand');
+                                }
                             }
                         }
                     }
@@ -460,6 +460,18 @@ function update() {
                         swap(x, y, x + 1, y);
                     }
                 }
+
+                for (let sx = -1; sx <= 1; sx++) {
+                    for (let sy = -1; sy <= 1; sy++) {
+                        let cx = x + sx;
+                        let cy = y + sy;
+                        if (cx >= 0 && cx < WIDTH && cy >= 0 && cy < HEIGHT && grid[cx][cy]) {
+                            if (grid[cx][cy].type === 'water') {
+                                createElementAt(x, y, 'glass');
+                            }
+                        }
+                    }
+                }
             }
 
             // --- WET SAND ---
@@ -471,11 +483,11 @@ function update() {
                 }
 
                 
-                if (y + 1 < HEIGHT && grid[x][y + 1] === 0) {
+                if (y + 1 < HEIGHT && (grid[x][y + 1] === 0 || grid[x][y + 1].type === 'water')) {
                     swap(x, y, x, y + 1);
                 } else {
-                    let left = x - 1 >= 0 && grid[x - 1][y] === 0;
-                    let right = x + 1 < WIDTH && grid[x + 1][y] === 0;
+                    let left = x - 1 >= 0 && (grid[x - 1][y] === 0 || grid[x - 1][y].type === 'water');
+                    let right = x + 1 < WIDTH && (grid[x + 1][y] === 0 || grid[x + 1][y].type === 'water');
                     if (left && right) {
                         let dir = Math.random() < 0.5 ? -1 : 1;
                         swap(x, y, x + dir, y);
@@ -571,14 +583,14 @@ function update() {
                 // Dissolves things below it
                 undisolvables = ['acid', 'blackhole', 'glass', 'barrier'];
                 if (y + 1 < HEIGHT && grid[x][y + 1] !== 0 && !undisolvables.includes(grid[x][y + 1].type)) {
-                    grid[x][y + 1] = 0;
-                    grid[x][y] = 0; // Acid consumes itself
+                    new_grid[x][y + 1] = 0;
+                    new_grid[x][y] = 0; // Acid consumes itself
                 } else if (x + 1 < WIDTH && grid[x + 1][y] !== 0 && !undisolvables.includes(grid[x + 1][y].type)) {
-                    grid[x + 1][y] = 0;
-                    grid[x][y] = 0; // Acid consumes itself
+                    new_grid[x + 1][y] = 0;
+                    new_grid[x][y] = 0; // Acid consumes itself
                 } else if (x - 1 > 0 && grid[x - 1][y] !== 0 && !undisolvables.includes(grid[x - 1][y].type)) {
-                    grid[x - 1][y] = 0;
-                    grid[x][y] = 0; // Acid consumes itself
+                    new_grid[x - 1][y] = 0;
+                    new_grid[x][y] = 0; // Acid consumes itself
                 } 
                 else if (y + 1 < HEIGHT && grid[x][y + 1] === 0) {
                     swap(x, y, x, y + 1);
@@ -618,7 +630,7 @@ function update() {
             if (cell.type === 'fire') {
                 cell.life--;
                 if (cell.life <= 0) {
-                    grid[x][y] = 0;
+                    new_grid[x][y] = 0;
                     continue;
                 }
                 // Spark color animation
@@ -692,7 +704,7 @@ function update() {
                             }
                             // Burn away grass/flowers
                             if (grid[cx][cy].type === 'grass' || grid[cx][cy].type === 'flower' || grid[cx][cy].type === 'grass_seed' || grid[cx][cy].type === 'flower_seed' || grid[cx][cy].type === 'tree') {
-                                grid[cx][cy] = { type: 'fire', color: '#ff4500', life: 15 };
+                                new_grid[cx][cy] = { type: 'fire', color: '#ff4500', life: 15 };
                             }
 
                             // Melt sand & glass
@@ -727,7 +739,7 @@ function update() {
                             
                             // Burn away grass/flowers
                             if (grid[cx][cy].type === 'grass' || grid[cx][cy].type === 'flower' || grid[cx][cy].type === 'grass_seed' || grid[cx][cy].type === 'flower_seed' || grid[cx][cy].type === 'tree') {
-                                grid[cx][cy] = { type: 'fire', color: '#ff4500', life: 15 };
+                                new_grid[cx][cy] = { type: 'fire', color: '#ff4500', life: 15 };
                             }
 
                             // Melt sand & glass
@@ -745,7 +757,7 @@ function update() {
                     swap(x, y, x, y + 1);
                 } else if (y + 1 < HEIGHT && grid[x][y + 1].type === 'soil') {
                     // Turn into grass blade
-                    grid[x][y] = { type: 'grass', color: '#3ad43a', length: 1 };
+                    new_grid[x][y] = { type: 'grass', color: '#3ad43a', length: 1 };
                 }
             }
 
@@ -753,7 +765,7 @@ function update() {
             if (cell.type === 'grass') {
                 if (cell.length < 5 && Math.random() < 0.02) {
                     if (y - 1 >= 0 && (grid[x][y - 1] === 0 || grid[x][y - 1].type === 'grass_seed')) {
-                        grid[x][y - 1] = { type: 'grass', color: '#2eb32e', length: cell.length + 1 };
+                        new_grid[x][y - 1] = { type: 'grass', color: '#2eb32e', length: cell.length + 1 };
                     }
                 }
             }
@@ -764,7 +776,7 @@ function update() {
                     swap(x, y, x, y + 1);
                 } else if (y + 1 < HEIGHT && (grid[x][y + 1].type === 'soil' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
                     // Initiate multi-pixel stem growth
-                    grid[x][y] = { type: 'flower', part: 'stem', length: 1, color: '#64bd64' };
+                    new_grid[x][y] = { type: 'flower', part: 'stem', length: 1, color: '#64bd64' };
                 }
             }
 
@@ -772,7 +784,7 @@ function update() {
             if (cell.type === 'flower' && cell.part === 'stem') {
                 if (cell.length < 7) {
                     if (Math.random() < 0.05 && y - 1 >= 0 && (grid[x][y - 1] === 0 || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer' || grid[x][y + 1].type === 'flower_seed')) {
-                        grid[x][y - 1] = { type: 'flower', part: 'stem', length: cell.length + 1, color: '#64bd64' };
+                        new_grid[x][y - 1] = { type: 'flower', part: 'stem', length: cell.length + 1, color: '#64bd64' };
                         // Convert old stem pixel to static flower stem color to halt its logic loop
                         cell.part = 'done_stem'; 
                     }
@@ -789,7 +801,7 @@ function update() {
                     swap(x, y, x, y + 1);
                 } else if (y + 1 < HEIGHT && (grid[x][y + 1].type === 'soil' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
                     // Initiate multi-pixel stem growth
-                    grid[x][y] = { type: 'tree', part: 'trunk', length: 1, color: '#9f3d00' };
+                    new_grid[x][y] = { type: 'tree', part: 'trunk', length: 1, color: '#9f3d00' };
                 }
             }
 
@@ -797,7 +809,7 @@ function update() {
             if (cell.type === 'tree' && cell.part === 'trunk') {
                 if (cell.length < 20) {
                     if (Math.random() < 0.05 && y - 1 >= 0 && (grid[x][y - 1] === 0 || grid[x][y - 1].type === 'tree_seed' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
-                        grid[x][y - 1] = { type: 'tree', part: 'trunk', length: cell.length + 1, color: '#9f3d00' };
+                        new_grid[x][y - 1] = { type: 'tree', part: 'trunk', length: cell.length + 1, color: '#9f3d00' };
                         // Convert old stem pixel to static flower stem color to halt its logic loop
                         cell.part = 'done_trunk'; 
                     }
@@ -813,8 +825,8 @@ function update() {
 
 function swap(x1, y1, x2, y2) {
     let temp = grid[x1][y1];
-    grid[x1][y1] = grid[x2][y2];
-    grid[x2][y2] = temp;
+    new_grid[x1][y1] = grid[x2][y2];
+    new_grid[x2][y2] = temp;
 }
 
 function explode(x, y) {
@@ -828,14 +840,14 @@ function explode(x, y) {
                     if (grid[nx][ny] && (grid[nx][ny].type === 'blackhole' || grid[nx][ny].type === 'barrier')) continue;
                     
                     if (Math.random() < 0.6) {
-                        grid[nx][ny] = {
+                        new_grid[nx][ny] = {
                             type: 'fire',
                             color: '#ff4500',
                             life: 20 + Math.random() * 20
                         };
                         addElement('fire');
                     } else {
-                        grid[nx][ny] = 0; // Blasted away
+                        new_grid[nx][ny] = 0; // Blasted away
                     }
                 }
             }
@@ -859,7 +871,7 @@ function growPetals(x, y) {
         let ny = y + p.dy;
         if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT) {
             if (grid[nx][ny] === 0 || grid[nx][ny].type === 'flower_seed') {
-                grid[nx][ny] = { 
+                new_grid[nx][ny] = { 
                     type: 'flower', 
                     part: 'petal', 
                     color: p.dx === 0 && p.dy === 0 ? '#ffcc33' : flowerColor // Yellow center bud
@@ -894,7 +906,7 @@ function growLeaves(x, y) {
         let ny = y + p.dy;
         if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT) {
             if (grid[nx][ny] === 0 || grid[nx][ny].type === 'tree_seed') {
-                grid[nx][ny] = { 
+                new_grid[nx][ny] = { 
                     type: 'tree', 
                     part: 'leaf', 
                     color: leafColor
@@ -945,7 +957,9 @@ function saveData() {
 
 function loop() {
     if (running) {
+        new_grid = grid;
         update();
+        grid = new_grid;
     }
     render();
     requestAnimationFrame(loop);
