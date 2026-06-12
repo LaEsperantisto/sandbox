@@ -406,7 +406,7 @@ function update() {
             if (cell.type === 'water') {
                 if (y + 1 < HEIGHT && grid[x][y + 1] === 0) {
                     swap(x, y, x, y + 1);
-                } else {
+                } else if (Math.random() > 0.5) {
                     let left = x - 1 >= 0 && grid[x - 1][y] === 0;
                     let right = x + 1 < WIDTH && grid[x + 1][y] === 0;
                     if (left && right) {
@@ -474,7 +474,7 @@ function update() {
 
                 if (y + 1 < HEIGHT && grid[x][y + 1] === 0) {
                     swap(x, y, x, y + 1);
-                } else {
+                } else if (Math.random() > 0.5) {
                     let left = x - 1 >= 0 && grid[x - 1][y] === 0;
                     let right = x + 1 < WIDTH && grid[x + 1][y] === 0;
                     if (left && right) {
@@ -512,7 +512,7 @@ function update() {
                 
                 if (y + 1 < HEIGHT && (grid[x][y + 1] === 0 || grid[x][y + 1].type === 'water')) {
                     swap(x, y, x, y + 1);
-                } else {
+                } else if (Math.random() > 0.5) {
                     let left = x - 1 >= 0 && (grid[x - 1][y] === 0 || grid[x - 1][y].type === 'water');
                     let right = x + 1 < WIDTH && (grid[x + 1][y] === 0 || grid[x + 1][y].type === 'water');
                     if (left && right) {
@@ -625,7 +625,7 @@ function update() {
                 } 
                 else if (y + 1 < HEIGHT && grid[x][y + 1] === 0) {
                     swap(x, y, x, y + 1);
-                } else {
+                } else if (Math.random() > 0.5) {
                     let dir = Math.random() < 0.5 ? -1 : 1;
                     if (x + dir >= 0 && x + dir < WIDTH && grid[x + dir][y] === 0) {
                         swap(x, y, x + dir, y);
@@ -699,8 +699,11 @@ function update() {
 
             if (cell.type === 'lava' || cell.type === 'eternal_lava') {
                 if (cell.type === 'lava') {
-                    try { new_grid[x][y].life--; }
-                    catch (e) { }
+                    if (new_grid[x][y].type === 'lava') new_grid[x][y].life--;
+                    else if (new_grid[x + 1][y].type === 'lava') new_grid[x + 1][y].life--;
+                    else if (new_grid[x - 1][y].type === 'lava') new_grid[x - 1][y].life--;
+
+
                     if (cell.life <= 0) {
                         createElementAt(x, y, 'magma');
                         continue;
@@ -713,7 +716,7 @@ function update() {
                 // Move like water
                 if (y + 1 < HEIGHT && grid[x][y + 1] === 0) {
                     swap(x, y, x, y + 1);
-                } else {
+                } else if (Math.random() > 0.5) {
                     let left = x - 1 >= 0 && grid[x - 1][y] === 0;
                     let right = x + 1 < WIDTH && grid[x + 1][y] === 0;
                     if (left && right) {
@@ -845,7 +848,7 @@ function update() {
                     if (Math.random() < 0.05 && y - 1 >= 0 && (grid[x][y - 1] === 0 || grid[x][y - 1].type === 'tree_seed' || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'fertilizer')) {
                         new_grid[x][y - 1] = { type: 'tree', part: 'trunk', length: cell.length + 1, color: '#9f3d00' };
                         // Convert old stem pixel to static flower stem color to halt its logic loop
-                        cell.part = 'done_trunk'; 
+                        cell.part = 'done_trunk';
                     }
                 } else {
                     // Stem reached full height! Grow custom petal structure
