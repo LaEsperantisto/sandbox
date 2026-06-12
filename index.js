@@ -509,8 +509,11 @@ function update() {
                     continue;
                 }
 
+                if (grid[x][y - 1].type === 'water' && Math.random() > 0.5) {
+                    swap(x, y, x, y - 1);
+                }
                 
-                if (y + 1 < HEIGHT && (grid[x][y + 1] === 0 || grid[x][y + 1].type === 'water')) {
+                if (y + 1 < HEIGHT && (grid[x][y + 1] === 0 || (grid[x][y + 1].type === 'water' && Math.random() > 0.5))) {
                     swap(x, y, x, y + 1);
                 } else if (Math.random() > 0.5) {
                     let left = x - 1 >= 0 && (grid[x - 1][y] === 0 || grid[x - 1][y].type === 'water');
@@ -622,8 +625,8 @@ function update() {
                 } else if (x - 1 > 0 && grid[x - 1][y] !== 0 && !undisolvables.includes(grid[x - 1][y].type)) {
                     new_grid[x - 1][y] = 0;
                     new_grid[x][y] = 0; // Acid consumes itself
-                } 
-                else if (y + 1 < HEIGHT && grid[x][y + 1] === 0) {
+                }
+                else if (y + 1 < HEIGHT && (grid[x][y + 1] === 0 || undisolvables.includes(grid[x][y + 1].type))) {
                     swap(x, y, x, y + 1);
                 } else if (Math.random() > 0.5) {
                     let dir = Math.random() < 0.5 ? -1 : 1;
@@ -636,11 +639,11 @@ function update() {
             // --- SOIL ---
             if (cell.type === 'soil') {
                 if (y + 1 < HEIGHT) {
-                    if (grid[x][y + 1] === 0 || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'acid') {
+                    if (grid[x][y + 1] === 0 || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'acid' || grid[x][y + 1].type === 'steam') {
                         swap(x, y, x, y + 1);
-                    } else if (x - 1 >= 0 && (grid[x - 1][y + 1] === 0 || grid[x - 1][y + 1].type === 'water' || grid[x][y + 1].type === 'acid') && Math.random() < 0.5) {
+                    } else if (x - 1 >= 0 && (grid[x - 1][y + 1] === 0 || grid[x - 1][y + 1].type === 'water' || grid[x][y + 1].type === 'acid' || grid[x][y + 1].type === 'steam') && Math.random() < 0.5) {
                         swap(x, y, x - 1, y + 1);
-                    } else if (x + 1 < WIDTH && (grid[x + 1][y + 1] === 0 || grid[x + 1][y + 1].type === 'water' || grid[x][y + 1].type === 'acid')) {
+                    } else if (x + 1 < WIDTH && (grid[x + 1][y + 1] === 0 || grid[x + 1][y + 1].type === 'water' || grid[x][y + 1].type === 'acid' || grid[x][y + 1].type === 'steam')) {
                         swap(x, y, x + 1, y + 1);
                     }
                 }
@@ -751,6 +754,10 @@ function update() {
                             if (grid[cx][cy].type === 'water') {
                                 createElementAt(x, y, 'magma');
                             }
+
+                            if (grid[cx][cy].type === 'brick' || grid[cx][cy].type === 'stone') {
+                                if (Math.random() > 0.99) createElementAt(cx, cy, 'lava');
+                            }
                         }
                     }
                 }
@@ -782,6 +789,10 @@ function update() {
                             // Melt sand & glass
                             if (grid[cx][cy].type === 'glass' || grid[cx][cy].type === 'sand') {
                                 createElementAt(cx, cy, 'molten_glass');
+                            }
+
+                            if (grid[cx][cy].type === 'brick' || grid[cx][cy].type === 'stone') {
+                                if (Math.random() > 0.99) createElementAt(cx, cy, 'magma');
                             }
                         }
                     }
