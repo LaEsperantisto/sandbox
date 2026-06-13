@@ -51,20 +51,22 @@ let DISCOVERABLE_ELEMENTS = [
     'steam',
     'magma',
     'electron',
-    'alpha'
+    'alpha',
+    'hydrogen',
+    'magnesium',
 ]
 
 // Default unlocked elements if no save data exists
 const DEFAULT_SHOWN_ELEMENTS = [
-  "eraser",
-  "barrier",
-  "lava",
-  "water",
-  "soil",
-  "blackhole",
-  "gunpowder",
-  "fertilizer",
-  "uranium"
+    "eraser",
+    "barrier",
+    "lava",
+    "water",
+    "soil",
+    "blackhole",
+    "gunpowder",
+    "uranium",
+    "magnesium",
 ];
 
 // Check cache for a save state, otherwise fall back to the defaults
@@ -119,8 +121,10 @@ const ELEMENTS = {
     lead:       { name: '🔩 Lead', color: '#919191'},
     steam:      { name: '💨 Steam', color: '#bab7b7'},
     barrier:    { name: '🚧 Barrier', color: '#000000'},
-    electron:   { name: '⚛ Electron', color: '#008cff'},
-    alpha:   { name: '⚛ Alpha Particle', color: '#ff0000'},
+    electron:   { name: '⚛ Electron', color: '#00ffff'},
+    alpha:      { name: '⚛ Alpha Particle', color: '#ff0000'},
+    magnesium:  { name: '🔥 Magnesium', color: '#949494'},
+    hydrogen:   { name: '🇭 Hydrogen', color: '#ffffff'}
 };
 
 function update_element_buttons() {
@@ -306,8 +310,11 @@ function createElementAt(x, y, type) {
     }
     if (type === 'steam') cell.life = 500 + Math.random() * 40;
     if (type === 'barrier') cell.color = (Math.random() < 0.5 ? '#ff0000' : '#ffffff');
-    if (type === 'electron') cell.direction = Math.floor(Math.random() * 8);
-    if (type === 'alpha') cell.direction = Math.floor(Math.random() * 8);
+    if (type === 'electron' || type === 'alpha') {
+        cell.direction = Math.floor(Math.random() * 8);
+        cell.life = 500 + Math.random() * 40;
+    }
+    if (type === 'hydrogen' && Math.random() > 0.9) cell.color = '#d8d7d7'
     
     new_grid[x][y] = cell;
 }
@@ -376,33 +383,24 @@ function update() {
 
             // --- FERTILIZER ---
             if (cell.type === 'fertilizer') {
-
-                let used = false;
-
                 for (let sx = -1; sx <= 1; sx++) {
                     for (let sy = -1; sy <= 1; sy++) {
                         let cx = x + sx;
                         let cy = y + sy;
                         if (cx >= 0 && cx < WIDTH && cy >= 0 && cy < HEIGHT && grid[cx][cy]) {
                             if (grid[cx][cy].type === 'soil') {
-                                used = true;
+                                new_grid[x][y] = 0;
                                 let seeds = ['tree_seed', 'flower_seed', 'grass_seed'];
                                 let i = Math.floor(Math.random() * seeds.length);
                                 let seed = seeds[i];
                                 createElementAt(cx, cy, seed);
                                 break;
                             }
-                            
-                            if (['water', 'tree_seed', 'flower_seed', 'grass_seed'].includes(grid[cx][cy].type)) {
-                                used = true;
-                            }
                         }
                     }
                 }
 
-                if (used) {
-                    new_grid[x][y] = 0;
-                } else if (y + 1 < HEIGHT) {
+                if (y + 1 < HEIGHT) {
                     if (grid[x][y + 1] === 0 || grid[x][y + 1].type === 'water' || grid[x][y + 1].type === 'acid') {
                         swap(x, y, x, y + 1);
                     } else if (x - 1 >= 0 && (grid[x - 1][y + 1] === 0 || grid[x - 1][y + 1].type === 'water') && Math.random() < 0.5) {
@@ -593,7 +591,12 @@ function update() {
                 try { new_grid[x][y].life--; }
                 catch (e) { }
                 if (cell.life <= 0) {
-                    createElementAt(x, y, 'radium');
+                    if (Math.random() > 0.9) {
+                        createElementAt(x, y, 'electron');
+                    }
+                    else {
+                        createElementAt(x, y, 'radium');
+                    }
                     continue;
                 }
 
@@ -697,7 +700,7 @@ function update() {
                 }
             }
 
-            // --- FIRE / EXPLOSION ---
+            // --- FIRE ---
             if (cell.type === 'fire') {
                 try { new_grid[x][y].life--; }
                 catch (e) { }
@@ -723,7 +726,10 @@ function update() {
                         let cx = x + sx;
                         let cy = y + sy;
                         if (cx >= 0 && cx < WIDTH && cy >= 0 && cy < HEIGHT && grid[cx][cy]) {
-                            if (grid[cx][cy].type === 'gunpowder') {
+                            if (grid[cx][cy].type === 'gunpowder' ||
+                                grid[cx][cy].type === 'magnesium' ||
+                                grid[cx][cy].type === 'hydrogen'
+                            ) {
                                 explode(cx, cy);
                             }
                             // Burn away grass/flowers
@@ -735,13 +741,13 @@ function update() {
                 }
             }
 
-            // --- LAVA / EXPLOSION ---
+            // --- LAVA / ETERNAL LAVA ---
 
             if (cell.type === 'lava' || cell.type === 'eternal_lava') {
                 if (cell.type === 'lava') {
                     if (new_grid[x][y].type === 'lava') new_grid[x][y].life--;
-                    else if (new_grid[x + 1][y].type === 'lava') new_grid[x + 1][y].life--;
-                    else if (new_grid[x - 1][y].type === 'lava') new_grid[x - 1][y].life--;
+                    else if (x <= WIDTH - 1 && new_grid[x + 1][y].type === 'lava') new_grid[x + 1][y].life--;
+                    else if (x > 1 && new_grid[x - 1][y].type === 'lava') new_grid[x - 1][y].life--;
 
 
                     if (cell.life <= 0) {
@@ -775,7 +781,10 @@ function update() {
                         let cx = x + sx;
                         let cy = y + sy;
                         if (cx >= 0 && cx < WIDTH && cy >= 0 && cy < HEIGHT && grid[cx][cy]) {
-                            if (grid[cx][cy].type === 'gunpowder') {
+                            if (grid[cx][cy].type === 'gunpowder' ||
+                                grid[cx][cy].type === 'magnesium' ||
+                                grid[cx][cy].type === 'hydrogen'
+                            ) {
                                 explode(cx, cy);
                             }
                             // Burn away grass/flowers
@@ -909,69 +918,9 @@ function update() {
                 }
             }
 
-            /*
-
             // --- ELECTRON ---
             if (cell.type === 'electron') {
-                let new_x;
-                let new_y;
-                switch (cell.direction) {
-                    case 0:
-                        new_x = x + 1;
-                        new_y = y;
-                        break;
-                    case 1:
-                        new_x = x - 1;
-                        new_y = y;
-                        break;
-                    case 2:
-                        new_x = x;
-                        new_y = y + 1;
-                        break;
-                    case 3:
-                        new_x = x;
-                        new_y = y - 1;
-                        break;
-                    case 4:
-                        new_x = x + 1;
-                        new_y = y - 1;
-                        break;
-                    case 5:
-                        new_x = x - 1;
-                        new_y = y + 1;
-                        break;
-                    case 6:
-                        new_x = x + 1;
-                        new_y = y + 1;
-                        break;
-                    case 7:
-                        new_x = x - 1;
-                        new_y = y - 1;
-                        break;
-                }
-                if (new_x > 0 && new_x < WIDTH && new_y > 0 && new_y < HEIGHT) {
-                    if (grid[new_x][new_y] === 0 || ['water'].includes(grid[new_x][new_y].type)) swap(x, y, new_x, new_y);
-                }
 
-                for (let sx = -1; sx <= 1; sx++) {
-                    for (let sy = -1; sy <= 1; sy++) {
-                        let cx = x + sx;
-                        let cy = y + sy;
-                        if (cx >= 0 && cx < WIDTH && cy >= 0 && cy < HEIGHT && grid[cx][cy]) {
-                            
-                            // Burn away grass/flowers
-                            if (grid[cx][cy].type === 'grass' || grid[cx][cy].type === 'flower' || grid[cx][cy].type === 'grass_seed' || grid[cx][cy].type === 'flower_seed' || grid[cx][cy].type === 'tree') {
-                                new_grid[cx][cy] = 0;
-                            }
-                        }
-                    }
-                }
-            }
-            
-            */
-
-            // --- ALPHA ---
-            if (cell.type === 'alpha') {
                 let new_x;
                 let new_y;
                 switch (cell.direction) {
@@ -1013,7 +962,15 @@ function update() {
                 }
 
                 if (grid[new_x] === undefined || grid[new_x][new_y] === undefined) {
-                    cell.direction = Math.floor(Math.random() * 8);
+                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
+                    try { new_grid[x][y].life--; }
+                    catch (e) { }
+                    if (cell.life <= 0) {
+                        new_grid[x][y] = 0;
+                        continue;
+                    }
+
+                    continue;
                 }
 
                 const target = grid[new_x][new_y];
@@ -1021,12 +978,24 @@ function update() {
                 if (
                     target === 0 ||
                     target.type === 'water' ||
-                    target.type === 'alpha' ||
-                    target.type === 'uranium'
+                    target.type === 'electron' ||
+                    target.type === 'thorium' ||
+                    target.type === 'steam' ||
+                    target.type === 'hydrogen'
                 ) {
                     swap(x, y, new_x, new_y);
+                } else if (target.type === 'magnesium') {
+                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
                 } else {
-                    cell.direction = Math.floor(Math.random() * 8);
+                    new_grid[x][y] = 0;
+                    if (Math.random() > 0.99) new_grid[new_x][new_y] = 0;
+                }
+
+                try { new_grid[new_x][new_y].life--; }
+                catch (e) { }
+                if (cell.life <= 0) {
+                    new_grid[new_x][new_y] = 0;
+                    continue;
                 }
                 
 
@@ -1039,9 +1008,143 @@ function update() {
                             // Burn away grass/flowers
                             if (grid[cx][cy].type === 'grass' || grid[cx][cy].type === 'flower' || grid[cx][cy].type === 'grass_seed' || grid[cx][cy].type === 'flower_seed' || grid[cx][cy].type === 'tree') {
                                 new_grid[cx][cy] = 0;
+                                new_grid[x][y] = 0;
                             }
                         }
                     }
+                }
+            }
+            
+            
+
+            // --- ALPHA ---
+            if (cell.type === 'alpha') {
+
+                let new_x;
+                let new_y;
+                switch (cell.direction) {
+                    case 0:
+                        new_x = x + 1;
+                        new_y = y;
+                        break;
+                    case 1:
+                        new_x = x - 1;
+                        new_y = y;
+                        break;
+                    case 2:
+                        new_x = x;
+                        new_y = y + 1;
+                        break;
+                    case 3:
+                        new_x = x;
+                        new_y = y - 1;
+                        break;
+                    case 4:
+                        new_x = x + 1;
+                        new_y = y - 1;
+                        break;
+                    case 5:
+                        new_x = x - 1;
+                        new_y = y + 1;
+                        break;
+                    case 6:
+                        new_x = x + 1;
+                        new_y = y + 1;
+                        break;
+                    case 7:
+                        new_x = x - 1;
+                        new_y = y - 1;
+                        break;
+                    default:
+                        new_x = x + 1;
+                        new_y = y + 1;
+                }
+
+                if (grid[new_x] === undefined || grid[new_x][new_y] === undefined) {
+                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
+                    try { new_grid[x][y].life--; }
+                    catch (e) { }
+                    if (cell.life <= 0) {
+                        new_grid[x][y] = 0;
+                        continue;
+                    }
+
+                    continue;
+                }
+
+                const target = grid[new_x][new_y];
+            
+                if (
+                    target === 0 ||
+                    target.type === 'water' ||
+                    target.type === 'alpha' ||
+                    target.type === 'uranium' ||
+                    target.type === 'steam' ||
+                    target.type === 'hydrogen'
+                ) {
+                    swap(x, y, new_x, new_y);
+                } else if (target.type === 'magnesium') {
+                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
+                } else {
+                    new_grid[x][y] = 0;
+                    if (Math.random() > 0.99) new_grid[new_x][new_y] = 0;
+                }
+
+                try { new_grid[new_x][new_y].life--; }
+                catch (e) { }
+                if (cell.life <= 0) {
+                    new_grid[new_x][new_y] = 0;
+                    continue;
+                }
+                
+
+                for (let sx = -1; sx <= 1; sx++) {
+                    for (let sy = -1; sy <= 1; sy++) {
+                        let cx = x + sx;
+                        let cy = y + sy;
+                        if (cx >= 0 && cx < WIDTH && cy >= 0 && cy < HEIGHT && grid[cx][cy]) {
+                            
+                            // Burn away grass/flowers
+                            if (grid[cx][cy].type === 'grass' || grid[cx][cy].type === 'flower' || grid[cx][cy].type === 'grass_seed' || grid[cx][cy].type === 'flower_seed' || grid[cx][cy].type === 'tree') {
+                                new_grid[cx][cy] = 0;
+                                new_grid[x][y] = 0;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // --- MAGNESIUM ---
+            if (cell.type === 'magnesium') {
+                for (let sx = -1; sx <= 1; sx++) {
+                    for (let sy = -1; sy <= 1; sy++) {
+                        let cx = x + sx;
+                        let cy = y + sy;
+                        if (cx >= 0 && cx < WIDTH && cy >= 0 && cy < HEIGHT && grid[cx][cy]) {
+                            
+                            // Burn away grass/flowers
+                            if (grid[cx][cy].type === 'water' && Math.random() > 0.99) {
+                                if (Math.random() > 0.99) createElementAt(x, y, 'fertilizer');
+                                else createElementAt(x, y, 'hydrogen');
+                            }
+                        }
+                    }
+                }
+            }
+
+            // --- HYDROGEN ---
+            if (cell.type === 'hydrogen') {
+                if (Math.random() > 0.999) {
+                    createElementAt(x, y, 'steam');
+                    continue;
+                }
+
+                let dx = Math.floor(Math.random() * 3) - 1;
+                let dy = Math.floor(Math.random() * 2) - 1; // 0 or -1
+                let nx = x + dx;
+                let ny = y + dy;
+                if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT && (grid[nx][ny] === 0 || grid[nx][ny].type === 'water') && Math.random() < 0.2) {
+                    swap(x, y, nx, ny);
                 }
             }
         }
@@ -1057,13 +1160,15 @@ function swap(x1, y1, x2, y2) {
     if (
         already_swapped_cells.some(cell => cell.x === x1 && cell.y === y1) || 
         already_swapped_cells.some(cell => cell.x === x2 && cell.y === y2)
-    ) return;
+    ) return false;
 
     new_grid[x1][y1] = cell2;
     new_grid[x2][y2] = cell1;
 
     already_swapped_cells.push({ x: x1, y: y1 });
     already_swapped_cells.push({ x: x2, y: y2 });
+
+    return true;
 }
 
 function explode(x, y) {
@@ -1163,7 +1268,18 @@ function render() {
             if (cell) {
                 ctx.fillStyle = cell.color;
                 // Add texture to grainy substances like Sand/Soil/Gunpowder
-                if(cell.variant && (cell.type === 'sand' || cell.type === 'soil' || cell.type === 'gunpowder' || cell.type === 'lava' || cell.type === 'eternal_lava' || cell.type === 'stone' || cell.type === 'fertilizer')) {
+                if (cell.variant &&
+                    (
+                        cell.type === 'sand' ||
+                        cell.type === 'soil' ||
+                        cell.type === 'gunpowder' ||
+                        cell.type === 'lava' ||
+                        cell.type === 'eternal_lava' ||
+                        cell.type === 'stone' ||
+                        cell.type === 'fertilizer' ||
+                        cell.type === 'magnesium'
+                    )
+                ) { 
                     ctx.fillStyle = adjustBrightness(cell.color, (cell.variant * 20) - 10);
                 }
                 ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
@@ -1194,7 +1310,7 @@ function saveData() {
 
 function loop() {
     if (running) {
-        already_swapped_cells = [];
+        already_swapped_cells = Array(0).fill(null);
         new_grid = grid.map(col => col.map(cell => cell ? { ...cell } : 0));
         update();
         grid = new_grid;
