@@ -54,6 +54,8 @@ let DISCOVERABLE_ELEMENTS = [
     'alpha',
     'hydrogen',
     'magnesium',
+    'polonium',
+    'neutron'
 ]
 
 // Default unlocked elements if no save data exists
@@ -67,6 +69,7 @@ const DEFAULT_SHOWN_ELEMENTS = [
     "gunpowder",
     "uranium",
     "magnesium",
+    "neutron",
 ];
 
 // Check cache for a save state, otherwise fall back to the defaults
@@ -79,6 +82,11 @@ if (savedData) {
         
         // Check if the cached data is a proper Array
         if (Array.isArray(parsed)) {
+
+            DEFAULT_SHOWN_ELEMENTS.forEach(elem => {
+                if (!parsed.includes(elem)) parsed.push(elem);
+            });
+
             shown_elements = parsed;
         } else {
             // It's the old dictionary format! Convert it to an array or clear it:
@@ -124,7 +132,9 @@ const ELEMENTS = {
     electron:   { name: '⚛ Electron', color: '#00ffff'},
     alpha:      { name: '⚛ Alpha Particle', color: '#ff0000'},
     magnesium:  { name: '🔥 Magnesium', color: '#949494'},
-    hydrogen:   { name: '🇭 Hydrogen', color: '#ffffff'}
+    hydrogen:   { name: '🇭 Hydrogen', color: '#ffffff'},
+    neutron:    { name: '⚛ Neutron', color: '#dedddd'},
+    polonium:   { name: '☢️ Polonium', color: '#fbff00'}
 };
 
 function update_element_buttons() {
@@ -310,11 +320,23 @@ function createElementAt(x, y, type) {
     }
     if (type === 'steam') cell.life = 500 + Math.random() * 40;
     if (type === 'barrier') cell.color = (Math.random() < 0.5 ? '#ff0000' : '#ffffff');
-    if (type === 'electron' || type === 'alpha') {
+    if (type === 'electron') {
+        cell.direction = Math.floor(Math.random() * 8);
+        cell.life = 900 + Math.random() * 40;
+    }
+    if (type === 'alpha') {
         cell.direction = Math.floor(Math.random() * 8);
         cell.life = 500 + Math.random() * 40;
     }
+    if (type === 'neutron') {
+        cell.direction = Math.floor(Math.random() * 8);
+        cell.life = 1500 + Math.random() * 40;
+    }
     if (type === 'hydrogen' && Math.random() > 0.9) cell.color = '#d8d7d7'
+    if (type === 'polonium') {
+        cell.color = (Math.random() < 0.2 ? '#303030' : '#f8ff23');
+        cell.life = 400 + Math.random() * 50;
+    }
     
     new_grid[x][y] = cell;
 }
@@ -741,9 +763,9 @@ function update() {
                 }
             }
 
-            // --- LAVA / ETERNAL LAVA ---
+            // --- LAVA / ETERNAL LAVA / POLONIUM ---
 
-            if (cell.type === 'lava' || cell.type === 'eternal_lava') {
+            if (cell.type === 'lava' || cell.type === 'eternal_lava' || cell.type === 'polonium') {
                 if (cell.type === 'lava') {
                     if (new_grid[x][y].type === 'lava') new_grid[x][y].life--;
                     else if (x <= WIDTH - 1 && new_grid[x + 1][y].type === 'lava') new_grid[x + 1][y].life--;
@@ -756,8 +778,25 @@ function update() {
                     }
                 }
 
+                else if (cell.type === 'polonium') {
+                    if (new_grid[x][y].type === 'polonium') new_grid[x][y].life--;
+                    else if (x < WIDTH - 1 && new_grid[x + 1][y].type === 'polonium') new_grid[x + 1][y].life--;
+                    else if (x > 1 && new_grid[x - 1][y].type === 'polonium') new_grid[x - 1][y].life--;
+
+
+                    if (cell.life <= 0) {
+                        if (Math.random() > 0.9) {
+                            createElementAt(x, y, 'alpha');
+                        }
+                        else {
+                            createElementAt(x, y, 'uranium');
+                        }
+                        continue;
+                    }
+                }
+
                 // Spark color animation
-                cell.color = `hsl(${15 + Math.random()*25}, 100%, ${50 + Math.random()*20}%)`;
+                if (cell.type !== 'polonium') cell.color = `hsl(${15 + Math.random()*25}, 100%, ${50 + Math.random()*20}%)`;
 
                 // Move like water
                 if (y + 1 < HEIGHT && grid[x][y + 1] === 0) {
@@ -1108,6 +1147,112 @@ function update() {
                             if (grid[cx][cy].type === 'grass' || grid[cx][cy].type === 'flower' || grid[cx][cy].type === 'grass_seed' || grid[cx][cy].type === 'flower_seed' || grid[cx][cy].type === 'tree') {
                                 new_grid[cx][cy] = 0;
                                 new_grid[x][y] = 0;
+                            }
+
+                            if (grid[cx][cy].type === 'lead') {
+                                if (Math.random() > 0.999) {
+                                    createElementAt(cx, cy, 'polonium');
+                                    new_grid[new_x][new_y].direction = Math.floor(Math.random() * 8);
+                                }
+                                else new_grid[new_x][new_y] = 0;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // --- NEUTRON ---
+            if (cell.type === 'neutron') {
+
+                let new_x;
+                let new_y;
+                switch (cell.direction) {
+                    case 0:
+                        new_x = x + 1;
+                        new_y = y;
+                        break;
+                    case 1:
+                        new_x = x - 1;
+                        new_y = y;
+                        break;
+                    case 2:
+                        new_x = x;
+                        new_y = y + 1;
+                        break;
+                    case 3:
+                        new_x = x;
+                        new_y = y - 1;
+                        break;
+                    case 4:
+                        new_x = x + 1;
+                        new_y = y - 1;
+                        break;
+                    case 5:
+                        new_x = x - 1;
+                        new_y = y + 1;
+                        break;
+                    case 6:
+                        new_x = x + 1;
+                        new_y = y + 1;
+                        break;
+                    case 7:
+                        new_x = x - 1;
+                        new_y = y - 1;
+                        break;
+                    default:
+                        new_x = x + 1;
+                        new_y = y + 1;
+                }
+
+                if (grid[new_x] === undefined || grid[new_x][new_y] === undefined) {
+                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
+                    try { new_grid[x][y].life--; }
+                    catch (e) { }
+                    if (cell.life <= 0) {
+                        new_grid[x][y] = 0;
+                        continue;
+                    }
+
+                    continue;
+                }
+
+                const target = grid[new_x][new_y];
+            
+                if (
+                    target === 0 ||
+                    (
+                        target.type !== 'lead'
+                    )
+                ) {
+                    swap(x, y, new_x, new_y);
+                }
+
+                try { new_grid[new_x][new_y].life--; }
+                catch (e) { }
+                if (cell.life <= 0) {
+                    new_grid[new_x][new_y] = 0;
+                    continue;
+                }
+                
+
+                for (let sx = -1; sx <= 1; sx++) {
+                    for (let sy = -1; sy <= 1; sy++) {
+                        let cx = x + sx;
+                        let cy = y + sy;
+                        if (cx >= 0 && cx < WIDTH && cy >= 0 && cy < HEIGHT && grid[cx][cy]) {
+                            
+                            // Burn away grass/flowers
+                            if (grid[cx][cy].type === 'grass' || grid[cx][cy].type === 'flower' || grid[cx][cy].type === 'grass_seed' || grid[cx][cy].type === 'flower_seed' || grid[cx][cy].type === 'tree') {
+                                new_grid[cx][cy] = 0;
+                                new_grid[x][y] = 0;
+                            }
+
+                            if (grid[cx][cy].type === 'lead') {
+                                if (Math.random() > 0.99) {
+                                    createElementAt(cx, cy, 'polonium');
+                                    new_grid[new_x][new_y].direction = Math.floor(Math.random() * 8);
+                                }
+                                else new_grid[new_x][new_y] = 0;
                             }
                         }
                     }
