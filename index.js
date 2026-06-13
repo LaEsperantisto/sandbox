@@ -1111,31 +1111,12 @@ function update() {
                     continue;
                 }
 
-                const target = grid[new_x][new_y];
-            
-                if (
-                    target === 0 ||
-                    target.type === 'water' ||
-                    target.type === 'alpha' ||
-                    target.type === 'uranium' ||
-                    target.type === 'steam' ||
-                    target.type === 'hydrogen'
-                ) {
-                    swap(x, y, new_x, new_y);
-                } else if (target.type === 'magnesium') {
-                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
-                } else {
-                    new_grid[x][y] = 0;
-                    if (Math.random() > 0.99) new_grid[new_x][new_y] = 0;
-                }
-
                 try { new_grid[new_x][new_y].life--; }
                 catch (e) { }
                 if (cell.life <= 0) {
                     new_grid[new_x][new_y] = 0;
                     continue;
                 }
-                
 
                 for (let sx = -1; sx <= 1; sx++) {
                     for (let sy = -1; sy <= 1; sy++) {
@@ -1152,12 +1133,30 @@ function update() {
                             if (grid[cx][cy].type === 'lead') {
                                 if (Math.random() > 0.999) {
                                     createElementAt(cx, cy, 'polonium');
-                                    new_grid[new_x][new_y].direction = Math.floor(Math.random() * 8);
+                                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
                                 }
-                                else new_grid[new_x][new_y] = 0;
+                                else new_grid[x][y] = 0;
                             }
                         }
                     }
+                }
+
+                const target = grid[new_x][new_y];
+            
+                if (
+                    target === 0 ||
+                    target.type === 'water' ||
+                    target.type === 'alpha' ||
+                    target.type === 'uranium' ||
+                    target.type === 'steam' ||
+                    target.type === 'hydrogen'
+                ) {
+                    swap(x, y, new_x, new_y);
+                } else if (target.type === 'magnesium') {
+                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
+                } else {
+                    new_grid[x][y] = 0;
+                    if (Math.random() > 0.99) new_grid[new_x][new_y] = 0;
                 }
             }
 
@@ -1216,24 +1215,12 @@ function update() {
                     continue;
                 }
 
-                const target = grid[new_x][new_y];
-            
-                if (
-                    target === 0 ||
-                    (
-                        target.type !== 'lead'
-                    )
-                ) {
-                    swap(x, y, new_x, new_y);
-                }
-
                 try { new_grid[new_x][new_y].life--; }
                 catch (e) { }
                 if (cell.life <= 0) {
                     new_grid[new_x][new_y] = 0;
                     continue;
                 }
-                
 
                 for (let sx = -1; sx <= 1; sx++) {
                     for (let sy = -1; sy <= 1; sy++) {
@@ -1250,12 +1237,29 @@ function update() {
                             if (grid[cx][cy].type === 'lead') {
                                 if (Math.random() > 0.99) {
                                     createElementAt(cx, cy, 'polonium');
-                                    new_grid[new_x][new_y].direction = Math.floor(Math.random() * 8);
+                                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
                                 }
-                                else new_grid[new_x][new_y] = 0;
+                                else new_grid[x][y] = 0;
                             }
                         }
                     }
+                }
+
+                const target = grid[new_x][new_y];
+            
+                if (
+                    target === 0 ||
+                    (
+                        target.type !== 'lead' &&
+                        target.type !== 'alpha' &&
+                        target.type !== 'electron'
+                    )
+                ) {
+                    if (target.type === 'neutron' ||
+                        target.type !== 'alpha' ||
+                        target.type !== 'electron'
+                    ) new_grid[x][y].direction = Math.floor(Math.random() * 8);
+                    swap(x, y, new_x, new_y);
                 }
             }
 
