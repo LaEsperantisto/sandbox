@@ -18,7 +18,7 @@ const HEIGHT = canvas.height / CELL_SIZE;
 let grid = Array(WIDTH).fill(null).map(() => Array(HEIGHT).fill(0));
 let new_grid = Array(WIDTH).fill(null).map(() => Array(HEIGHT).fill(0));
 
-let currentElement = 'sand';
+let currentElement = 'water';
 let brushSize = 3;
 let isDrawing = false;
 let running = true;
@@ -55,21 +55,25 @@ let DISCOVERABLE_ELEMENTS = [
     'hydrogen',
     'magnesium',
     'polonium',
-    'neutron'
+    'gamma',
+    'bismuth',
+    'graphite',
 ]
 
 // Default unlocked elements if no save data exists
 const DEFAULT_SHOWN_ELEMENTS = [
     "eraser",
     "barrier",
-    "lava",
     "water",
     "soil",
     "blackhole",
     "gunpowder",
     "uranium",
     "magnesium",
-    "neutron",
+    "gamma",
+    "electron",
+    "graphite",
+    "bismuth",
 ];
 
 // Check cache for a save state, otherwise fall back to the defaults
@@ -133,8 +137,10 @@ const ELEMENTS = {
     alpha:      { name: '⚛ Alpha Particle', color: '#ff0000'},
     magnesium:  { name: '🔥 Magnesium', color: '#949494'},
     hydrogen:   { name: '🇭 Hydrogen', color: '#ffffff'},
-    neutron:    { name: '⚛ Neutron', color: '#dedddd'},
-    polonium:   { name: '☢️ Polonium', color: '#fbff00'}
+    gamma:    { name: '⚛ Gamma Particle', color: '#dedddd'},
+    polonium:   { name: '☢️ Polonium', color: '#fbff00'},
+    bismuth:   { name: '💎 Bismuth', color: '#f389ff'},
+    graphite:   { name: '✏️ Graphite', color: '#808080'},
 };
 
 function update_element_buttons() {
@@ -328,13 +334,17 @@ function createElementAt(x, y, type) {
         cell.direction = Math.floor(Math.random() * 8);
         cell.life = 500 + Math.random() * 40;
     }
-    if (type === 'neutron') {
+    if (type === 'gamma') {
         cell.direction = Math.floor(Math.random() * 8);
         cell.life = 1500 + Math.random() * 40;
     }
     if (type === 'hydrogen' && Math.random() > 0.9) cell.color = '#d8d7d7'
     if (type === 'polonium') {
         cell.color = (Math.random() < 0.2 ? '#303030' : '#f8ff23');
+        cell.life = 400 + Math.random() * 50;
+    }
+    if (type === 'bismuth') {
+        cell.color = (Math.random() < 0.3 ? '#e5e5e5' : Math.random() < 0.3 ? '#ff60e2' : '#23fff0');
         cell.life = 400 + Math.random() * 50;
     }
     
@@ -614,7 +624,7 @@ function update() {
                 catch (e) { }
                 if (cell.life <= 0) {
                     if (Math.random() > 0.9) {
-                        createElementAt(x, y, 'electron');
+                        createElementAt(x, y, 'alpha');
                     }
                     else {
                         createElementAt(x, y, 'radium');
@@ -638,7 +648,12 @@ function update() {
                 try { new_grid[x][y].life--; }
                 catch (e) { }
                 if (cell.life <= 0) {
-                    createElementAt(x, y, 'radon');
+                    if (Math.random() > 0.9) {
+                        createElementAt(x, y, 'alpha');
+                    }
+                    else {
+                        createElementAt(x, y, 'radon');
+                    }
                     continue;
                 }
             }
@@ -647,8 +662,14 @@ function update() {
             if (cell.type === 'radon') {
                 try { new_grid[x][y].life--; }
                 catch (e) { }
+
                 if (cell.life <= 0) {
-                    createElementAt(x, y, 'lead');
+                    if (Math.random() > 0.9) {
+                        createElementAt(x, y, 'alpha');
+                    }
+                    else {
+                        createElementAt(x, y, 'lead');
+                    }
                     continue;
                 }
 
@@ -662,13 +683,43 @@ function update() {
             }
 
             // --- LEAD ---
-            if (cell.type === 'lead') {
+            if (cell.type === 'lead') {                
                 let dx = Math.floor(Math.random() * 3) - 1;
                 let dy = Math.floor(Math.random() * 3) - 1;
                 let nx = x + dx;
                 let ny = y + dy;
-                if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT && grid[nx][ny].type === 'water' && Math.random() < 0.2) {
+                if (nx >= 0 && nx < WIDTH && ny >= 0 && ny < HEIGHT && grid[nx][ny].type === 'water' && Math.random() > 0.9999) {
                     swap(x, y, nx, ny);
+                }
+            }
+
+            // --- BISMUTH ---
+            if (cell.type === 'bismuth') {
+                if (new_grid[x][y].type === 'bismuth') new_grid[x][y].life--;
+                else if (x < WIDTH - 1 && new_grid[x + 1][y].type === 'bismuth') new_grid[x + 1][y].life--;
+                else if (x > 1 && new_grid[x - 1][y].type === 'bismuth') new_grid[x - 1][y].life--;
+
+
+                if (cell.life <= 0) {
+                    createElementAt(x, y, 'polonium');
+                    continue;
+                }
+                
+                
+                let dx = Math.floor(Math.random() * 3) - 1;
+                let dy = Math.floor(Math.random() * 3) - 1;
+                let nx = x + dx;
+                let ny = y + dy;
+                
+
+                if (y + 1 < HEIGHT) {
+                    if (grid[x][y + 1] === 0 ) {
+                        swap(x, y, x, y + 1);
+                    } else if (x - 1 >= 0 && (grid[x - 1][y + 1] === 0 || grid[x - 1][y + 1].type === 'water') && Math.random() < 0.5) {
+                        swap(x, y, x - 1, y + 1);
+                    } else if (x + 1 < WIDTH && grid[x + 1][y + 1] === 0) {
+                        swap(x, y, x + 1, y + 1);
+                    }
                 }
             }
 
@@ -837,7 +888,8 @@ function update() {
                             }
 
                             if (grid[cx][cy].type === 'water') {
-                                createElementAt(x, y, 'magma');
+                                if (cell.type === 'polonium' && Math.random() > 0.99) createElementAt(x, y, 'lava');
+                                else createElementAt(x, y, 'magma');
                             }
 
                             if (grid[cx][cy].type === 'brick') {
@@ -1012,24 +1064,6 @@ function update() {
                     continue;
                 }
 
-                const target = grid[new_x][new_y];
-            
-                if (
-                    target === 0 ||
-                    target.type === 'water' ||
-                    target.type === 'electron' ||
-                    target.type === 'thorium' ||
-                    target.type === 'steam' ||
-                    target.type === 'hydrogen'
-                ) {
-                    swap(x, y, new_x, new_y);
-                } else if (target.type === 'magnesium') {
-                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
-                } else {
-                    new_grid[x][y] = 0;
-                    if (Math.random() > 0.99) new_grid[new_x][new_y] = 0;
-                }
-
                 try { new_grid[new_x][new_y].life--; }
                 catch (e) { }
                 if (cell.life <= 0) {
@@ -1049,8 +1083,65 @@ function update() {
                                 new_grid[cx][cy] = 0;
                                 new_grid[x][y] = 0;
                             }
+
+                            if (grid[cx][cy].type === 'uranium') {
+                                if (Math.random() > 0.5) {
+                                    createElementAt(cx, cy, 'thorium');
+                                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
+                                }
+                                else new_grid[x][y] = 0;
+                            }
+
+                            if (grid[cx][cy].type === 'thorium') {
+                                if (Math.random() > 0.5) {
+                                    createElementAt(cx, cy, 'radium');
+                                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
+                                }
+                                else new_grid[x][y] = 0;
+                            }
+
+                            if (grid[cx][cy].type === 'radium') {
+                                if (Math.random() > 0.5) {
+                                    createElementAt(cx, cy, 'radon');
+                                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
+                                }
+                                else new_grid[x][y] = 0;
+                            }
+
+                            if (grid[cx][cy].type === 'radon') {
+                                if (Math.random() > 0.5) {
+                                    createElementAt(cx, cy, 'lead');
+                                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
+                                }
+                                else new_grid[x][y] = 0;
+                            }
+
+                            if (grid[cx][cy].type === 'lead') {
+                                if (Math.random() > 0.5) {
+                                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
+                                }
+                                else new_grid[x][y] = 0;
+                            }
                         }
                     }
+                }
+
+                const target = grid[new_x][new_y];
+            
+                if (
+                    target === 0 ||
+                    target.type === 'water' ||
+                    target.type === 'electron' ||
+                    target.type === 'thorium' ||
+                    target.type === 'steam' ||
+                    target.type === 'hydrogen'
+                ) {
+                    swap(x, y, new_x, new_y);
+                } else if (target.type === 'magnesium' || ( target.type === 'lead' && Math.random() > 0.99) || target.type === 'graphite') {
+                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
+                } else {
+                    new_grid[x][y] = 0;
+                    if (Math.random() > 0.99) new_grid[new_x][new_y] = 0;
                 }
             }
             
@@ -1130,9 +1221,33 @@ function update() {
                                 new_grid[x][y] = 0;
                             }
 
+                            if (grid[cx][cy].type === 'thorium') {
+                                if (Math.random() > 0.5) {
+                                    createElementAt(cx, cy, 'uranium');
+                                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
+                                }
+                                else new_grid[x][y] = 0;
+                            }
+
+                            if (grid[cx][cy].type === 'radium') {
+                                if (Math.random() > 0.5) {
+                                    createElementAt(cx, cy, 'thorium');
+                                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
+                                }
+                                else new_grid[x][y] = 0;
+                            }
+
+                            if (grid[cx][cy].type === 'radon') {
+                                if (Math.random() > 0.5) {
+                                    createElementAt(cx, cy, 'radium');
+                                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
+                                }
+                                else new_grid[x][y] = 0;
+                            }
+
                             if (grid[cx][cy].type === 'lead') {
-                                if (Math.random() > 0.999) {
-                                    createElementAt(cx, cy, 'polonium');
+                                if (Math.random() > 0.5) {
+                                    createElementAt(cx, cy, 'radon');
                                     new_grid[x][y].direction = Math.floor(Math.random() * 8);
                                 }
                                 else new_grid[x][y] = 0;
@@ -1152,7 +1267,7 @@ function update() {
                     target.type === 'hydrogen'
                 ) {
                     swap(x, y, new_x, new_y);
-                } else if (target.type === 'magnesium') {
+                } else if (target.type === 'magnesium' || ( target.type === 'lead' && Math.random() > 0.99) || target.type === 'graphite') {
                     new_grid[x][y].direction = Math.floor(Math.random() * 8);
                 } else {
                     new_grid[x][y] = 0;
@@ -1160,8 +1275,8 @@ function update() {
                 }
             }
 
-            // --- NEUTRON ---
-            if (cell.type === 'neutron') {
+            // --- GAMMA ---
+            if (cell.type === 'gamma') {
 
                 let new_x;
                 let new_y;
@@ -1234,12 +1349,9 @@ function update() {
                                 new_grid[x][y] = 0;
                             }
 
-                            if (grid[cx][cy].type === 'lead') {
-                                if (Math.random() > 0.99) {
-                                    createElementAt(cx, cy, 'polonium');
-                                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
-                                }
-                                else new_grid[x][y] = 0;
+                            if (grid[cx][cy].type === 'uranium') {
+                                createElementAt(cx, cy, 'thorium');
+                                createElementAt(x, y, 'alpha');
                             }
                         }
                     }
@@ -1249,17 +1361,17 @@ function update() {
             
                 if (
                     target === 0 ||
-                    (
-                        target.type !== 'lead' &&
-                        target.type !== 'alpha' &&
-                        target.type !== 'electron'
-                    )
+                    target.type === 'water' ||
+                    target.type === 'gamma' ||
+                    target.type === 'steam' ||
+                    target.type === 'hydrogen'
                 ) {
-                    if (target.type === 'neutron' ||
-                        target.type !== 'alpha' ||
-                        target.type !== 'electron'
-                    ) new_grid[x][y].direction = Math.floor(Math.random() * 8);
                     swap(x, y, new_x, new_y);
+                } else if (target.type === 'magnesium' || ( target.type === 'lead' && Math.random() > 0.99) || target.type === 'graphite') {
+                    new_grid[x][y].direction = Math.floor(Math.random() * 8);
+                } else {
+                    new_grid[x][y] = 0;
+                    if (Math.random() > 0.99) new_grid[new_x][new_y] = 0;
                 }
             }
 
@@ -1279,6 +1391,11 @@ function update() {
                         }
                     }
                 }
+            }
+
+            // --- GRAPHITE ---
+            if (cell.type === 'graphite') {
+                continue;
             }
 
             // --- HYDROGEN ---
