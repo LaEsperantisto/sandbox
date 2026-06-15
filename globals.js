@@ -289,7 +289,8 @@ export const MOLECULAR_PROPERTIES = {
 
 export const PARTICLES = {
     eraser: { color: '#000000'},
-    barrier: { color: '#000000'},
+    barrier: { color: '#000000' },
+    heat_finger: { color: '#000000' },
     
     // --- Oxygen Family (Red/Gray-Red Spectrum) ---
     O: { color: '#ff4d4d' },     // Bright, energetic red for the reactive atom

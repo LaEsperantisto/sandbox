@@ -106,7 +106,12 @@ function createParticleAt(x, y, type, bypass_tests = false) {
     }
 
     if (type === 'heat_finger') {
-        new_grid[x][y].heat = temp;
+        // Only apply temperature if a valid particle object exists in that cell
+        if (new_grid[x][y] !== 0 && new_grid[x][y] && new_grid[x][y].type !== 'barrier') {
+            const shc = Utils.getChemicalProperties(new_grid[x][y].type)?.shc || 1;
+            new_grid[x][y].heat = temp * shc;
+        }
+        return;
     }
 
     if (type === 'barrier') {
@@ -137,8 +142,10 @@ function createParticleAt(x, y, type, bypass_tests = false) {
 
 // Helper function to update info label when hovering over buttons
 function handleButtonHover(key) {
-    if (key === 'barrier' || key === 'eraser' || key === 'heat_finger') return;
-
+    if (key === 'barrier' || key === 'eraser' || key === 'heat_finger') {
+        infoLbl.innerText = `Tool Profile: ${key.replace('_', ' ').toUpperCase()}`;
+        return;
+    }
     const shc = Utils.getChemicalProperties(key)?.shc || 0;
     const mass = Utils.getMass(key);
     // Setting default heat as baseline room temperature since it's an unplaced template button
@@ -157,7 +164,10 @@ function update_particle_buttons() {
             if (!Globals.PARTICLES[key]) return; 
 
             const btn = document.createElement('button');
-            btn.innerText = key;
+            if (key === 'heat_finger') btn.innerText = 'Heat finger';
+            else if (key === 'eraser') btn.innerText = 'Eraser';
+            else if (key === 'barrier') btn.innerText = 'Barrier';
+            else btn.innerText = key;
             btn.style.backgroundColor = Globals.PARTICLES[key].color === '#000000' ? '#333' : Globals.PARTICLES[key].color;
             btn.dataset.type = key;
             if (key === currentParticle) btn.classList.add('active');
