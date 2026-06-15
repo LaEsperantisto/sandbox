@@ -11,6 +11,8 @@ const brushSlider = document.getElementById('brush-slider');
 const brushVal = document.getElementById('brush-val');
 const tempSlider = document.getElementById('temp-slider');
 const tempVal = document.getElementById('temp-val');
+const tempValCelsius = document.getElementById('temp-val-celsius');
+const tempValFahrenheit = document.getElementById('temp-val-fahrenheit');
 const clearBtn = document.getElementById('clear-btn');
 const pauseBtn = document.getElementById('pause-btn');
 const resetBtn = document.getElementById('reset-btn');
@@ -30,7 +32,7 @@ const HEIGHT = canvas.height / CELL_SIZE;
 let grid = Array(WIDTH).fill(null).map(() => Array(HEIGHT).fill(0));
 let new_grid = Array(WIDTH).fill(null).map(() => Array(HEIGHT).fill(0));
 
-let currentParticle = 'H2O';
+let currentParticle = 'O';
 let brushSize = 3;
 let temp = 293;
 if (DEBUG) brushSize = 20;
@@ -102,6 +104,11 @@ function createParticleAt(x, y, type, bypass_tests = false) {
         new_grid[x][y] = 0;
         return;
     }
+
+    if (type === 'heat_finger') {
+        new_grid[x][y].heat = temp;
+    }
+
     if (type === 'barrier') {
         new_grid[x][y] = {
             type: 'barrier',
@@ -110,7 +117,7 @@ function createParticleAt(x, y, type, bypass_tests = false) {
             heat: 0,
         }
 
-        already_changed_cells.push({ x: x, y: y });
+        if (!bypass_tests) already_changed_cells.push({ x: x, y: y });
         return;
     }
     
@@ -130,7 +137,7 @@ function createParticleAt(x, y, type, bypass_tests = false) {
 
 // Helper function to update info label when hovering over buttons
 function handleButtonHover(key) {
-    if (key === 'barrier' || key === 'eraser') return;
+    if (key === 'barrier' || key === 'eraser' || key === 'heat_finger') return;
 
     const shc = Utils.getChemicalProperties(key)?.shc || 0;
     const mass = Utils.getMass(key);
@@ -227,6 +234,8 @@ brushSlider.addEventListener('input', (e) => {
 tempSlider.addEventListener('input', (e) => {
     temp = parseInt(e.target.value);
     tempVal.innerText = temp;
+    tempValCelsius.innerText = Math.floor(temp - 273.15);
+    tempValFahrenheit.innerText = Math.floor((temp - 273.15) * 9/5 + 32);
 });
 
 clearBtn.addEventListener('click', () => {
@@ -241,7 +250,7 @@ resetBtn.addEventListener('click', () => {
     if (confirm("Are you sure you want to reset your discovered particles? This will clear your save cache.")) {
         localStorage.removeItem('sandbox_shown_particles');
         shown_particles = Globals.DEFAULT_SHOWN_PARTICLES;
-        currentParticle = 'H2O';
+        currentParticle = 'O';
         update_particle_buttons();
         console.log('Cache cleared and particles reset.');
     }
@@ -349,6 +358,8 @@ function update() {
 
             const currentType = cell.type;
             if (currentType === 'barrier') continue;
+
+            if (cell.heat / Math.random() < 100) continue;
             
             const currentState = Utils.getState(currentType, cell.heat);
 
@@ -685,31 +696,73 @@ function renderBook() {
     Globals.REACTIONS.forEach(rxn => {
         const structuralElements = [...rxn.reactants, ...rxn.products];
         const fullyDiscovered = structuralElements.every(p => shown_particles.includes(p) || DEBUG);
+        if (!fullyDiscovered) return;
 
-        if (fullyDiscovered) {
-            reactionsCount++;
+        reactionsCount++;
 
-            // Map reactants array to styled components
-            const coloredReactants = rxn.reactants.map(p => {
-                const color = Globals.PARTICLES[p]?.color || '#ffffff';
-                return `<span style="color: ${color}; font-weight: bold;">${p}</span>`;
-            }).join(' + ');
+        // Map reactants array to styled components
+        const coloredReactants = rxn.reactants.map(p => {
+            let color = Globals.PARTICLES[p]?.color || '#ffffff';
+            
+            return `<span style="color: ${color}; font-weight: bold;">${p}</span>`;
+        }).join(' + ');
 
-            // Map products array to styled components
-            const coloredProducts = rxn.products.map(p => {
-                const color = Globals.PARTICLES[p]?.color || '#ffffff';
-                return `<span style="color: ${color}; font-weight: bold;">${p}</span>`;
-            }).join(' + ');
+        // Map products array to styled components
+        const coloredProducts = rxn.products.map(p => {
+            let color = Globals.PARTICLES[p]?.color || '#ffffff';
+            return `<span style="color: ${color}; font-weight: bold;">${p}</span>`;
+        }).join(' + ');
 
-            rxnHtml += `
-                <div class="book-card">
-                    <div class="book-card-title" style="color: #6cff37;">Equation Formula</div>
-                    <div class="book-card-prop" style="font-size: 14px; font-family: monospace; letter-spacing: 0.5px;">
-                        ${coloredReactants} ➔ ${coloredProducts}
-                    </div>
-                    <div class="book-card-prop" style="margin-top: 5px;">Activation threshold: ${rxn.minTemp}°K</div>
-                </div>`;
-        }
+        let color = '#6cff37';
+
+        rxnHtml += `
+            <div class="book-card">
+                <div class="book-card-title" style="color: ${color};">Equation Formula</div>
+                <div class="book-card-prop" style="font-size: 14px; font-family: monospace; letter-spacing: 0.5px;">
+                    ${coloredReactants} ➔ ${coloredProducts}
+                </div>
+                <div class="book-card-prop" style="margin-top: 5px;">Activation threshold: ${rxn.minTemp}°K</div>
+            </div>`;
+        
+    });
+
+    Globals.REACTIONS.forEach(rxn => {
+        const structuralElements = [...rxn.reactants, ...rxn.products];
+        const fullyDiscovered = structuralElements.every(p => shown_particles.includes(p) || DEBUG);
+        const undiscovered_dim = -100;
+
+        if (fullyDiscovered) return;
+
+        reactionsCount++;
+
+        // Map reactants array to styled components
+        const coloredReactants = rxn.reactants.map(p => {
+            let color = Globals.PARTICLES[p]?.color || '#ffffff';
+            color = adjustBrightness(color, undiscovered_dim)
+            p = shown_particles.includes(p) ? p : '???';
+            return `<span style="color: ${color}; font-weight: bold;">${p}</span>`;
+        }).join(' + ');
+
+        // Map products array to styled components
+        const coloredProducts = rxn.products.map(p => {
+            let color = Globals.PARTICLES[p]?.color || '#ffffff';
+            color = adjustBrightness(color, undiscovered_dim)
+            p = shown_particles.includes(p) ? p : '???';
+            return `<span style="color: ${color}; font-weight: bold;">${p}</span>`;
+        }).join(' + ');
+
+        let color = '#6cff37';
+        color = adjustBrightness(color, undiscovered_dim);
+
+        rxnHtml += `
+            <div class="book-card">
+                <div class="book-card-title" style="color: ${color};">Equation Formula</div>
+                <div class="book-card-prop" style="font-size: 14px; font-family: monospace; letter-spacing: 0.5px;">
+                    ${coloredReactants} ➔ ${coloredProducts}
+                </div>
+                <div class="book-card-prop" style="margin-top: 5px;">Activation threshold: ${rxn.minTemp}°K</div>
+            </div>`;
+        
     });
 
     if (reactionsCount === 0) {
@@ -720,5 +773,5 @@ function renderBook() {
     bookBody.innerHTML += rxnHtml;
 }
 
-setInterval(loop, 20);
+setInterval(loop, 10);
 requestAnimationFrame(loop);
