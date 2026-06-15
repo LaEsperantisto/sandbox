@@ -10,9 +10,8 @@ const ctx = canvas.getContext('2d');
 const brushSlider = document.getElementById('brush-slider');
 const brushVal = document.getElementById('brush-val');
 const tempSlider = document.getElementById('temp-slider');
+const tempInput = document.getElementById('temp-input');
 const tempVal = document.getElementById('temp-val');
-const tempValCelsius = document.getElementById('temp-val-celsius');
-const tempValFahrenheit = document.getElementById('temp-val-fahrenheit');
 const clearBtn = document.getElementById('clear-btn');
 const pauseBtn = document.getElementById('pause-btn');
 const resetBtn = document.getElementById('reset-btn');
@@ -66,7 +65,10 @@ if (savedData) {
     }
 }
 
-canvas.addEventListener('mousemove', (e) => {
+window.addEventListener('mousemove', (e) => {
+    infoLbl.style.left = `${e.clientX}px`;
+    infoLbl.style.top = `${e.clientY}px`;
+
     const { x, y } = getCanvasPosition(e);
 
     if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
@@ -83,12 +85,14 @@ canvas.addEventListener('mousemove', (e) => {
 
             infoLbl.innerText = `Particle: ${cell.type} [${state}] Mass: ${mass} | Temp: ${temp}°K (Heat: ${Math.floor(cell.heat)}) Pos: (${x}, ${y}) | SHC: ${shc} | Density: ${density}`;
         }
+    } else {
+        infoLbl.innerText = "";
     }
 });
 
 // Clear debug text if the mouse leaves the canvas bounds entirely
 canvas.addEventListener('mouseleave', () => {
-    infoLbl.innerText = "Hovering: Outside Sandbox";
+    infoLbl.innerText = "";
 });
 
 
@@ -180,7 +184,7 @@ function update_particle_buttons() {
 
             // Hover event listeners
             btn.addEventListener('mouseenter', () => handleButtonHover(key));
-            btn.addEventListener('mouseleave', () => { infoLbl.innerText = "Hovering: Outside Sandbox"; });
+            btn.addEventListener('mouseleave', () => { infoLbl.innerText = ""; });
 
             btnGrid.appendChild(btn);
         });
@@ -199,7 +203,7 @@ function update_particle_buttons() {
                 btn.addEventListener('mouseenter', () => {
                     infoLbl.innerText = `Element Profile: [Locked / Undiscovered Particle]`;
                 });
-                btn.addEventListener('mouseleave', () => { infoLbl.innerText = "Hovering: Outside Sandbox"; });
+                btn.addEventListener('mouseleave', () => { infoLbl.innerText = ""; });
 
                 btnGrid.appendChild(btn);
             }
@@ -223,7 +227,7 @@ function update_particle_buttons() {
             
             // Hover event listeners
             btn.addEventListener('mouseenter', () => handleButtonHover(key));
-            btn.addEventListener('mouseleave', () => { infoLbl.innerText = "Hovering: Outside Sandbox"; });
+            btn.addEventListener('mouseleave', () => { infoLbl.innerText = ""; });
 
             btnGrid.appendChild(btn);
         });
@@ -241,11 +245,23 @@ brushSlider.addEventListener('input', (e) => {
     brushVal.innerText = brushSize;
 });
 
-tempSlider.addEventListener('input', (e) => {
-    temp = parseInt(e.target.value);
+function updateTemperatureDisplay(newTemp) {
+    temp = Math.max(0, Math.min(3000, newTemp));
+
     tempVal.innerText = temp;
+    tempSlider.value = temp;
+    tempInput.value = temp;
+    
     tempValCelsius.innerText = Math.floor(temp - 273.15);
     tempValFahrenheit.innerText = Math.floor((temp - 273.15) * 9/5 + 32);
+}
+
+tempSlider.addEventListener('input', (e) => {
+    updateTemperatureDisplay(parseInt(e.target.value) || 0);
+});
+
+tempInput.addEventListener('input', (e) => {
+    updateTemperatureDisplay(parseInt(e.target.value) || 0);
 });
 
 clearBtn.addEventListener('click', () => {
@@ -508,7 +524,7 @@ function update() {
 
             if (currentState === 'liquid') {
                 let dx = Math.floor(Math.random() * 3) - 1;
-                let dy = Math.random() > 0.7 ? -1 : Math.floor(Math.random() * 2) + 1; 
+                let dy = Math.random() > 0.9 ? -1 : Math.floor(Math.random() * 2) + 1; 
                 let nx = x + dx;
                 let ny = y + dy;
 
@@ -586,7 +602,7 @@ function render() {
         for (let y = 0; y < HEIGHT; y++) {
             let cell = grid[x][y];
             if (cell) {
-                ctx.fillStyle = cell.color;
+                ctx.fillStyle = Utils.getDynamicColor(cell.color, cell.type, cell.heat);
                 ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
             }
         }
@@ -732,6 +748,7 @@ function renderBook() {
                     ${coloredReactants} ➔ ${coloredProducts}
                 </div>
                 <div class="book-card-prop" style="margin-top: 5px;">Activation threshold: ${rxn.minTemp}°K</div>
+                <div class="book-card-prop" style="margin-top: 5px;">Heat released: ${rxn.heatReleased}°K</div>
             </div>`;
         
     });
@@ -771,6 +788,7 @@ function renderBook() {
                     ${coloredReactants} ➔ ${coloredProducts}
                 </div>
                 <div class="book-card-prop" style="margin-top: 5px;">Activation threshold: ${rxn.minTemp}°K</div>
+                <div class="book-card-prop" style="margin-top: 5px;">Heat released: ${rxn.heatReleased}°K</div>
             </div>`;
         
     });

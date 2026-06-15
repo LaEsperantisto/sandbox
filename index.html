@@ -233,6 +233,18 @@
             color: #bbb;
             margin: 2px 0;
         }
+
+        #info-label {
+            position: fixed;
+            pointer-events: none;
+            transform: translate(15px, 15px);
+            background-color: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            z-index: 9999;
+        }
     </style>
 </head>
 <body>
@@ -243,7 +255,7 @@
 
     <div id="#sandbox-container" style="display: flex; gap: 20px;">
         <div id="sandbox-container">
-            <canvas id="sandbox" width="500" height="500"></canvas>
+            <canvas id="sandbox" width="900" height="900"></canvas>
             
             <div id="ui-panel">
                 <div class="panel-section">
@@ -256,9 +268,15 @@
                     <input type="range" id="brush-slider" min="1" max="20" value="3">
                 </div>
 
-                <div class="panel-section">
-                    <div class="panel-title">Temperature: <span id="temp-val">293</span>°K / <span id="temp-val-celsius">19.85</span>°C / <span id="temp-val-fahrenheit">67.73</span>°F</div>
-                    <input type="range" id="temp-slider" min="0" max="2000" value="293">
+                <div class="control-group">
+                    <label for="temp-slider">Temperature (°K):</label>
+                    <input type="range" id="temp-slider" min="0" max="3000" value="293"> 
+                    
+                    <input type="number" id="temp-input" min="0" max="3000" value="293" style="width: 70px; margin-left: 10px;">
+                    
+                    <span id="temp-val" style="display:none;">293</span>
+                    <span id="temp-val-celsius">20</span>°C / 
+                    <span id="temp-val-fahrenheit">68</span>°F
                 </div>
                 
                 <button id="book-btn">📖 View Discovery Book</button>
@@ -267,8 +285,6 @@
                 <button id="reset-btn">Reset Progress</button>
                 <div class="controls-text">Click & Drag to draw</div>
             </div>
-
-            <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSfY4wz14YYvCN2I1p5sAWV_fDqpf2tNBiCTnnyZ2QC6Dr2qMQ/viewform?usp=publish-editor" width="200" height="700" frameborder="0" marginheight="0" marginwidth="0" id="feedback-form">Loading…</iframe>
         </div>
     </div>
 
@@ -281,6 +297,8 @@
             <div id="book-body"></div>
         </div>
     </div>
+
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfY4wz14YYvCN2I1p5sAWV_fDqpf2tNBiCTnnyZ2QC6Dr2qMQ/viewform?usp=publish-editor" id="feedback-form">Feedback form</iframe>
 
 <script type="module" src="index.js"></script>
 </body>

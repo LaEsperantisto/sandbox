@@ -140,3 +140,59 @@ export function diffuseHeat(cell1, cell2, rate = 0.2) {
     cell1.heat += heatDelta;
     cell2.heat -= heatDelta;
 }
+
+export function getDynamicColor(baseHex, type, heat) {
+    if (type === 'barrier' || type === 'eraser' || type === 'heat_finger') return baseHex;
+
+    const temp = getTemp(type, heat);
+    
+    let r = parseInt(baseHex.substring(1, 3), 16);
+    let g = parseInt(baseHex.substring(3, 5), 16);
+    let b = parseInt(baseHex.substring(5, 7), 16);
+
+    const variation = (Math.sin(heat * 0.08) * 10);
+    r = Math.min(255, Math.max(0, r + variation));
+    g = Math.min(255, Math.max(0, g + variation));
+    b = Math.min(255, Math.max(0, b + variation));
+
+    if (temp > 600) {
+        let emitR = 255;
+        let emitG = 65;
+        let emitB = 0;
+
+        const chem = CHEMICAL_PROPERTIES[type];
+        
+        if (chem) {
+            if (chem.nature === 'atom' && chem.emission) {
+                emitR = chem.emission.r;
+                emitG = chem.emission.g;
+                emitB = chem.emission.b;
+            } else if (chem.nature === 'molecule') {
+                const mol = MOLECULAR_PROPERTIES[type];
+                if (mol && mol.composition) {
+                    let sourceAtom = mol.composition.find(atom => CHEMICAL_PROPERTIES[atom]?.emission);
+                    if (sourceAtom) {
+                        const targetEmission = CHEMICAL_PROPERTIES[sourceAtom].emission;
+                        emitR = targetEmission.r;
+                        emitG = targetEmission.g;
+                        emitB = targetEmission.b;
+                    }
+                }
+            }
+        }
+
+        let blendFactor = Math.min(1, (temp - 600) / 400); // Maxes fully out at 1000°K
+        r = Math.floor(r * (1 - blendFactor) + emitR * blendFactor);
+        g = Math.floor(g * (1 - blendFactor) + emitG * blendFactor);
+        b = Math.floor(b * (1 - blendFactor) + emitB * blendFactor);
+
+        if (temp > 1000) {
+            let whiteHotFactor = Math.min(1, (temp - 1000) / 500); // Scales up to 1500°K
+            r = Math.floor(r * (1 - whiteHotFactor) + 255 * whiteHotFactor);
+            g = Math.floor(g * (1 - whiteHotFactor) + 230 * whiteHotFactor);
+            b = Math.floor(b * (1 - whiteHotFactor) + 200 * whiteHotFactor);
+        }
+    }
+
+    return `rgb(${Math.min(255, Math.max(0, r))}, ${Math.min(255, Math.max(0, g))}, ${Math.min(255, Math.max(0, b))})`;
+}
