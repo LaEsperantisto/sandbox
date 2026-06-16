@@ -4,7 +4,7 @@ export const DISCOVERABLE_PARTICLES = [
     'heat_finger',
     'O',
     'O2',
-    'O3', // Added Ozone
+    'O3',
     'H',
     'H2',
     'H2O2',
@@ -33,7 +33,27 @@ export const DISCOVERABLE_PARTICLES = [
     'NO',
     'NO2',
     'KNO3',
-    'C2N2' // Added Cyanogen
+    'C2N2',
+    'N2H2',
+    'N2H4',
+    'HNO3',
+    'NH4NO2',
+    'NH4NO3',
+    'HCN',
+    'HCNO',
+    'C2H2',
+    'C2H4',
+    'C2H6',
+    'C2H5OH',
+    'C3H4',
+    'C3H6',
+    'C3H8',
+    'C3H7OH',
+    'NH4OH',
+    'C6H12O6',
+    'C6H6',
+    'C8H8',
+    'H2CO3'
 ];
 
 export const DEFAULT_SHOWN_PARTICLES = [
@@ -67,7 +87,7 @@ export const CHEMICAL_PROPERTIES = {
     N: { reactivity: 70, nature: 'atom', shc: 1.04, solid_density: 1.02, liquid_density: 0.808, gas_density: 1.25, emission: { r: 0, g: 150, b: 255 } },
     H2: { reactivity: 60, nature: 'molecule', shc: 4, solid_density: 0.086, liquid_density: 0.070, gas_density: 0.089 },
     O2: { reactivity: 50, nature: 'molecule', shc: 5, solid_density: 1.33, liquid_density: 1.14, gas_density: 1.43 },
-    O3: { reactivity: 85, nature: 'molecule', shc: 0.82, solid_density: 1.61, liquid_density: 1.35, gas_density: 2.14 }, // Added Ozone properties
+    O3: { reactivity: 85, nature: 'molecule', shc: 0.82, solid_density: 1.61, liquid_density: 1.35, gas_density: 2.14 },
     S8: { reactivity: 40, nature: 'molecule', shc: 6, solid_density: 2.07, liquid_density: 1.81, gas_density: 10.8 },
     H2O: { reactivity: 10, nature: 'molecule', shc: 16, solid_density: 0.917, liquid_density: 1.00, gas_density: 0.804 },
     H2O2: { reactivity: 80, nature: 'molecule', shc: 11, solid_density: 1.71, liquid_density: 1.45, gas_density: 1.52 },
@@ -90,13 +110,33 @@ export const CHEMICAL_PROPERTIES = {
     NO: { reactivity: 60, nature: 'molecule', shc: 0.99, solid_density: 1.34, liquid_density: 1.27, gas_density: 1.34 },
     NO2: { reactivity: 75, nature: 'molecule', shc: 0.83, solid_density: 1.44, liquid_density: 1.45, gas_density: 2.62 },
     KNO3: { reactivity: 65, nature: 'molecule', shc: 0.95, solid_density: 2.11, liquid_density: 2.00, gas_density: 4.50 },
-    C2N2: { reactivity: 65, nature: 'molecule', shc: 1.35, solid_density: 0.95, liquid_density: 0.95, gas_density: 2.34 } // Added Cyanogen properties
+    C2N2: { reactivity: 65, nature: 'molecule', shc: 1.35, solid_density: 0.95, liquid_density: 0.95, gas_density: 2.34 },
+    N2H2: { reactivity: 75, nature: 'molecule', shc: 1.20, solid_density: 1.20, liquid_density: 1.01, gas_density: 1.34 },
+    N2H4: { reactivity: 80, nature: 'molecule', shc: 3.08, solid_density: 1.02, liquid_density: 1.02, gas_density: 1.43 },
+    HNO3: { reactivity: 85, nature: 'molecule', shc: 1.74, solid_density: 1.51, liquid_density: 1.51, gas_density: 2.81 },
+    NH4NO2: { reactivity: 75, nature: 'molecule', shc: 1.50, solid_density: 1.69, liquid_density: 1.50, gas_density: 2.86 },
+    NH4NO3: { reactivity: 70, nature: 'molecule', shc: 1.74, solid_density: 1.72, liquid_density: 1.60, gas_density: 3.57 },
+    HCN: { reactivity: 65, nature: 'molecule', shc: 2.61, solid_density: 0.71, liquid_density: 0.68, gas_density: 0.93 },
+    HCNO: { reactivity: 70, nature: 'molecule', shc: 1.80, solid_density: 1.24, liquid_density: 1.14, gas_density: 1.48 },
+    C2H2: { reactivity: 75, nature: 'molecule', shc: 1.68, solid_density: 0.62, liquid_density: 0.62, gas_density: 1.17 },
+    C2H4: { reactivity: 60, nature: 'molecule', shc: 1.55, solid_density: 0.57, liquid_density: 0.57, gas_density: 1.26 },
+    C2H6: { reactivity: 45, nature: 'molecule', shc: 1.73, solid_density: 0.55, liquid_density: 0.55, gas_density: 1.36 },
+    C2H5OH: { reactivity: 35, nature: 'molecule', shc: 2.44, solid_density: 0.79, liquid_density: 0.79, gas_density: 1.59 },
+    C3H4: { reactivity: 65, nature: 'molecule', shc: 1.50, solid_density: 0.70, liquid_density: 0.70, gas_density: 1.79 },
+    C3H6: { reactivity: 55, nature: 'molecule', shc: 1.51, solid_density: 0.52, liquid_density: 0.52, gas_density: 1.88 },
+    C3H8: { reactivity: 45, nature: 'molecule', shc: 1.67, solid_density: 0.50, liquid_density: 0.50, gas_density: 2.01 },
+    C3H7OH: { reactivity: 35, nature: 'molecule', shc: 2.40, solid_density: 0.80, liquid_density: 0.80, gas_density: 2.07 },
+    NH4OH: { reactivity: 50, nature: 'molecule', shc: 4.20, solid_density: 0.91, liquid_density: 0.91, gas_density: 1.20 },
+    C6H12O6: { reactivity: 25, nature: 'molecule', shc: 1.20, solid_density: 1.54, liquid_density: 1.40, gas_density: 6.20 },
+    C6H6: { reactivity: 40, nature: 'molecule', shc: 1.74, solid_density: 0.88, liquid_density: 0.88, gas_density: 2.77 },
+    C8H8: { reactivity: 50, nature: 'molecule', shc: 1.65, solid_density: 0.91, liquid_density: 0.91, gas_density: 3.60 },
+    H2CO3: { reactivity: 45, nature: 'molecule', shc: 1.90, solid_density: 1.60, liquid_density: 1.40, gas_density: 2.14 }
 };
 
 export const MOLECULAR_PROPERTIES = {
     H2: { mp: 14, bp: 20, composition: ['H', 'H'] },
     O2: { mp: 55, bp: 90, composition: ['O', 'O'] },
-    O3: { mp: 80, bp: 161, composition: ['O', 'O', 'O'] }, // Added Ozone composition
+    O3: { mp: 80, bp: 161, composition: ['O', 'O', 'O'] },
     S8: { mp: 388, bp: 718, composition: ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S'] },
     H2O: { mp: 273, bp: 373, composition: ['H', 'H', 'O'] },
     H2O2: { mp: 273, bp: 423, composition: ['H', 'H', 'O', 'O'] },
@@ -119,7 +159,27 @@ export const MOLECULAR_PROPERTIES = {
     NO: { mp: 109, bp: 121, composition: ['N', 'O'] },
     NO2: { mp: 262, bp: 294, composition: ['N', 'O', 'O'] },
     KNO3: { mp: 607, bp: 673, composition: ['K', 'N', 'O', 'O', 'O'] },
-    C2N2: { mp: 245, bp: 252, composition: ['C', 'C', 'N', 'N'] } // Added Cyanogen composition
+    C2N2: { mp: 245, bp: 252, composition: ['C', 'C', 'N', 'N'] },
+    N2H2: { mp: 173, bp: 263, composition: ['N', 'N', 'H', 'H'] },
+    N2H4: { mp: 275, bp: 387, composition: ['N', 'N', 'H', 'H', 'H', 'H'] },
+    HNO3: { mp: 231, bp: 356, composition: ['H', 'N', 'O', 'O', 'O'] },
+    NH4NO2: { mp: 330, bp: 340, composition: ['N', 'N', 'H', 'H', 'H', 'H', 'O', 'O'] },
+    NH4NO3: { mp: 442, bp: 483, composition: ['N', 'N', 'H', 'H', 'H', 'H', 'O', 'O', 'O'] },
+    HCN: { mp: 260, bp: 299, composition: ['H', 'C', 'N'] },
+    HCNO: { mp: 263, bp: 312, composition: ['H', 'C', 'N', 'O'] },
+    C2H2: { mp: 192, bp: 189, composition: ['C', 'C', 'H', 'H'] },
+    C2H4: { mp: 104, bp: 169, composition: ['C', 'C', 'H', 'H', 'H', 'H'] },
+    C2H6: { mp: 90, bp: 184, composition: ['C', 'C', 'H', 'H', 'H', 'H', 'H', 'H'] },
+    C2H5OH: { mp: 159, bp: 351, composition: ['C', 'C', 'H', 'H', 'H', 'H', 'H', 'O'] },
+    C3H4: { mp: 171, bp: 249, composition: ['C', 'C', 'C', 'H', 'H', 'H', 'H'] },
+    C3H6: { mp: 88, bp: 225, composition: ['C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H'] },
+    C3H8: { mp: 85, bp: 231, composition: ['C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H'] },
+    C3H7OH: { mp: 147, bp: 370, composition: ['C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'O'] },
+    NH4OH: { mp: 196, bp: 300, composition: ['N', 'H', 'H', 'H', 'H', 'H', 'O'] },
+    C6H12O6: { mp: 423, bp: 500, composition: ['C', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'O', 'O', 'O', 'O', 'O', 'O'] },
+    C6H6: { mp: 279, bp: 353, composition: ['C', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H'] },
+    C8H8: { mp: 243, bp: 418, composition: ['C', 'C', 'C', 'C', 'C', 'C', 'C', 'C', 'H', 'H', 'H', 'H', 'H', 'H', 'H', 'H'] },
+    H2CO3: { mp: 223, bp: 300, composition: ['H', 'H', 'C', 'O', 'O', 'O'] }
 };
 
 export const PARTICLES = {
@@ -128,7 +188,7 @@ export const PARTICLES = {
     heat_finger: { color: '#000000' },
     O: { color: '#ff4d4d' },
     O2: { color: '#b33636' },
-    O3: { color: '#7b1fa2' }, // Dark violet for ozone gas
+    O3: { color: '#7b1fa2' },
     H: { color: '#ffffff' },
     H2: { color: '#d9e2ec' },
     S: { color: '#ffeb3b' },
@@ -157,116 +217,106 @@ export const PARTICLES = {
     NO: { color: '#8d6e63' },      
     NO2: { color: '#5d4037' },     
     KNO3: { color: '#e3f2fd' },
-    C2N2: { color: '#ff8a80' } // Light pink-red toxic cyanogen gas
+    C2N2: { color: '#ff8a80' },
+    N2H2: { color: '#4dd0e1' },
+    N2H4: { color: '#26c6da' },
+    HNO3: { color: '#e040fb' },
+    NH4NO2: { color: '#ff80ab' },
+    NH4NO3: { color: '#ff4081' },
+    HCN: { color: '#ff5252' },
+    HCNO: { color: '#ff7043' },
+    C2H2: { color: '#a5d6a7' },
+    C2H4: { color: '#66bb6a' },
+    C2H6: { color: '#43a047' },
+    C2H5OH: { color: '#00e676' },
+    C3H4: { color: '#81d4fa' },
+    C3H6: { color: '#29b6f6' },
+    C3H8: { color: '#039be5' },
+    C3H7OH: { color: '#00b0ff' },
+    NH4OH: { color: '#00e5ff' },
+    C6H12O6: { color: '#fff59d' },
+    C6H6: { color: '#bcaaac' },
+    C8H8: { color: '#a1887f' },
+    H2CO3: { color: '#b2dfdb' }
 };
 
 export const REACTIONS = [
-    // --- Base Diatomic & Elemental Generation ---
     { reactants: ['H', 'H'], products: ['H2'], minTemp: 0, heatReleased: 436 },
     { reactants: ['O', 'O'], products: ['O2'], minTemp: 0, heatReleased: 498 },
     { reactants: ['S', 'S', 'S', 'S', 'S', 'S', 'S', 'S'], products: ['S8'], minTemp: 0, heatReleased: 800 },
     { reactants: ['N', 'N'], products: ['N2'], minTemp: 0, heatReleased: 945 },
 
-    // --- Ozone Interactions ---
-    {
-        reactants: ['O2', 'O'],
-        products: ['O3'],
-        minTemp: 250,
-        heatReleased: 105
-    },
-    {
-        reactants: ['O3'], // Thermal decomposition of ozone back to oxygen at elevated heat
-        products: ['O2', 'O'],
-        minTemp: 523,
-        heatReleased: -105
-    },
+    // --- Ozone ---
+    { reactants: ['O2', 'O'], products: ['O3'], minTemp: 250, heatReleased: 105 },
+    { reactants: ['O3'], products: ['O2', 'O'], minTemp: 523, heatReleased: -105 },
 
-    // --- Methane Combustion ---
-    {
-        reactants: ['CH4', 'O2', 'O2'], // Complete combustion
-        products: ['CO2', 'H2O', 'H2O'],
-        minTemp: 873,
-        heatReleased: 891
-    },
-    {
-        reactants: ['CH4', 'CH4', 'O2', 'O2', 'O2'], // Incomplete combustion (produces toxic CO)
-        products: ['CO', 'CO', 'H2O', 'H2O', 'H2O', 'H2O'],
-        minTemp: 800,
-        heatReleased: 519
-    },
+    // --- Methane ---
+    { reactants: ['CH4', 'O2', 'O2'], products: ['CO2', 'H2O', 'H2O'], minTemp: 873, heatReleased: 891 },
 
-    // --- Carbon Disulfide Combustion & Synthesis Updates ---
-    {
-        reactants: ['CS2', 'O2', 'O2', 'O2'],
-        products: ['CO2', 'SO2', 'SO2'],
-        minTemp: 363, // Low flashpoint combustion
-        heatReleased: 1075
-    },
+    // --- Hydrocarbon Combustions ---
+    { reactants: ['C2H2', 'C2H2', 'O2', 'O2', 'O2', 'O2', 'O2'], products: ['CO2', 'CO2', 'CO2', 'CO2', 'H2O', 'H2O'], minTemp: 573, heatReleased: 2600 },
+    { reactants: ['C2H4', 'O2', 'O2', 'O2'], products: ['CO2', 'CO2', 'H2O', 'H2O'], minTemp: 763, heatReleased: 1411 },
+    { reactants: ['C2H6', 'C2H6', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2'], products: ['CO2', 'CO2', 'CO2', 'CO2', 'H2O', 'H2O', 'H2O', 'H2O', 'H2O', 'H2O'], minTemp: 793, heatReleased: 3120 },
+    { reactants: ['C3H4', 'O2', 'O2', 'O2', 'O2'], products: ['CO2', 'CO2', 'CO2', 'H2O', 'H2O'], minTemp: 540, heatReleased: 1938 },
+    { reactants: ['C3H6', 'C3H6', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2'], products: ['CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'H2O', 'H2O', 'H2O', 'H2O', 'H2O', 'H2O'], minTemp: 730, heatReleased: 4116 },
+    { reactants: ['C3H8', 'O2', 'O2', 'O2', 'O2', 'O2'], products: ['CO2', 'CO2', 'CO2', 'H2O', 'H2O', 'H2O', 'H2O'], minTemp: 743, heatReleased: 2220 },
+    { reactants: ['C6H6', 'C6H6', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2'], products: ['CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'H2O', 'H2O', 'H2O', 'H2O', 'H2O', 'H2O'], minTemp: 833, heatReleased: 6536 },
+    { reactants: ['C8H8', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2'], products: ['CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'H2O', 'H2O', 'H2O', 'H2O'], minTemp: 760, heatReleased: 4395 },
 
-    // --- Cyanogen Synthesis & Combustion ---
-    {
-        reactants: ['C', 'C', 'N2'],
-        products: ['C2N2'],
-        minTemp: 1200,
-        heatReleased: -300 // Endothermic synthesis
-    },
-    {
-        reactants: ['C2N2', 'O2', 'O2'],
-        products: ['CO2', 'CO2', 'N2'],
-        minTemp: 900,
-        heatReleased: 1095 // Extremely hot flame profile
-    },
+    // --- Alcohols & Sugars Combustion ---
+    { reactants: ['C2H5OH', 'O2', 'O2', 'O2'], products: ['CO2', 'CO2', 'H2O', 'H2O', 'H2O'], minTemp: 638, heatReleased: 1367 },
+    { reactants: ['C3H7OH', 'C3H7OH', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2'], products: ['CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'H2O', 'H2O', 'H2O', 'H2O', 'H2O', 'H2O', 'H2O', 'H2O'], minTemp: 640, heatReleased: 4010 },
+    { reactants: ['C6H12O6', 'O2', 'O2', 'O2', 'O2', 'O2', 'O2'], products: ['CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'CO2', 'H2O', 'H2O', 'H2O', 'H2O', 'H2O', 'H2O'], minTemp: 420, heatReleased: 2805 },
 
-    // --- Gunpowder / Black Powder Deflagration ---
-    // Classic reaction using Charcoal (C), Sulfur (S), and Saltpeter (KNO3)
-    {
-        reactants: ['KNO3', 'KNO3', 'S', 'C', 'C', 'C'],
-        products: ['K2S', 'N2', 'CO2', 'CO2', 'CO2'],
-        minTemp: 573,
-        heatReleased: 650
-    },
+    // --- Carbonic Acid ---
+    { reactants: ['CO2', 'H2O'], products: ['H2CO3'], minTemp: 273, heatReleased: 20 },
+    { reactants: ['H2CO3'], products: ['CO2', 'H2O'], minTemp: 323, heatReleased: -20 },
 
-    // --- Nitrogen Fixation & Compounds ---
+    // --- Ammonia & Ammonium Salts ---
+    { reactants: ['NH3', 'H2O'], products: ['NH4OH'], minTemp: 273, heatReleased: 35 },
+    { reactants: ['NH4OH'], products: ['NH3', 'H2O'], minTemp: 310, heatReleased: -35 },
+    { reactants: ['NH3', 'HNO3'], products: ['NH4NO3'], minTemp: 293, heatReleased: 145 },
+    { reactants: ['NH4NO2'], products: ['N2', 'H2O', 'H2O'], minTemp: 335, heatReleased: 300 },
+    { reactants: ['NH4NO3'], products: ['NO2', 'NO', 'H2O', 'H2O'], minTemp: 483, heatReleased: 240 },
+
+    // --- Cyanides & Isocyanates ---
+    { reactants: ['NH3', 'CH4'], products: ['HCN', 'H2', 'H2', 'H2'], minTemp: 1300, heatReleased: -250 },
+    { reactants: ['HCN', 'O'], products: ['HCNO'], minTemp: 350, heatReleased: 110 },
+
+    // --- Diazene & Hydrazine ---
+    { reactants: ['N2H2', 'H2'], products: ['N2H4'], minTemp: 300, heatReleased: 140 },
+    { reactants: ['N2H4', 'O2'], products: ['N2', 'H2O', 'H2O'], minTemp: 293, heatReleased: 622 },
+
+    // --- Nitric Acid Synthesis ---
+    { reactants: ['NO2', 'NO2', 'H2O', 'O'], products: ['HNO3', 'HNO3'], minTemp: 293, heatReleased: 128 },
+
+    // --- Existing Base Reactions ---
     { reactants: ['N2', 'H2', 'H2', 'H2'], products: ['NH3', 'NH3'], minTemp: 673, heatReleased: 92.4 },
     { reactants: ['N2', 'O2'], products: ['NO', 'NO'], minTemp: 2200, heatReleased: -180 },
     { reactants: ['NO', 'NO', 'O2'], products: ['NO2', 'NO2'], minTemp: 293, heatReleased: 114 },
     { reactants: ['NH3', 'NH3', 'NH3', 'NH3', 'O2', 'O2', 'O2', 'O2', 'O2'], products: ['NO', 'NO', 'NO', 'NO', 'H2O', 'H2O', 'H2O', 'H2O', 'H2O', 'H2O'], minTemp: 773, heatReleased: 905 },
     { reactants: ['KOH', 'NO2', 'NO2', 'O'], products: ['KNO3', 'KNO3'], minTemp: 323, heatReleased: 220 },
-
-    // --- Carbon & Oxygen (Combustion) ---
     { reactants: ['C', 'O2'], products: ['CO2'], minTemp: 673, heatReleased: 393.5 },
     { reactants: ['C', 'C', 'O2'], products: ['CO', 'CO'], minTemp: 673, heatReleased: 221 },
     { reactants: ['CO', 'CO', 'O2'], products: ['CO2', 'CO2'], minTemp: 880, heatReleased: 566 },
-
-    // --- Carbon & Hydrogen (Methane Synthesis) ---
     { reactants: ['C', 'H2', 'H2'], products: ['CH4'], minTemp: 873, heatReleased: 74.8 },
-
-    // --- Carbon & Sulfur (Carbon Disulfide Synthesis) ---
     { reactants: ['C', 'S', 'S'], products: ['CS2'], minTemp: 1123, heatReleased: -89 },
-
-    // --- Carbon & Potassium Complexes ---
+    { reactants: ['CS2', 'O2', 'O2', 'O2'], products: ['CO2', 'SO2', 'SO2'], minTemp: 363, heatReleased: 1075 },
     { reactants: ['KOH', 'KOH', 'CO2'], products: ['K2CO3', 'H2O'], minTemp: 293, heatReleased: 114 },
-
-    // --- Water & Peroxide Generation ---
     { reactants: ['H2', 'H2', 'O2'], products: ['H2O', 'H2O'], minTemp: 573, heatReleased: 572 },
     { reactants: ['H2', 'O2'], products: ['H2O2'], minTemp: 400, heatReleased: 136 },
     { reactants: ['H2O2'], products: ['H2O', 'O'], minTemp: 350, heatReleased: 100 },
-
-    // --- Sulfur Compounds (H2S, SO2, SO3) ---
     { reactants: ['H2', 'S'], products: ['H2S'], minTemp: 523, heatReleased: 21 },
     { reactants: ['S', 'O2'], products: ['SO2'], minTemp: 523, heatReleased: 297 },
     { reactants: ['SO2', 'O'], products: ['SO3'], minTemp: 673, heatReleased: 99 },
     { reactants: ['H2S', 'H2S', 'O2', 'O2', 'O2'], products: ['SO2', 'SO2', 'H2O', 'H2O'], minTemp: 523, heatReleased: 1036 },
-
-    // --- Acid Synthesis (H2SO4) ---
     { reactants: ['SO3', 'H2O'], products: ['H2SO4'], minTemp: 293, heatReleased: 130 },
-
-    // --- Potassium Reactions ---
     { reactants: ['K', 'O2'], products: ['KO2'], minTemp: 293, heatReleased: 284 },
     { reactants: ['K', 'K', 'O'], products: ['K2O'], minTemp: 293, heatReleased: 363 },
     { reactants: ['K', 'K', 'H2O'], products: ['KOH', 'KOH', 'H2'], minTemp: 250, heatReleased: 390 },
     { reactants: ['K', 'K', 'S'], products: ['K2S'], minTemp: 373, heatReleased: 381 },
-    { reactants: ['KOH', 'KOH', 'H2SO4'], products: ['K2SO4', 'H2O', 'H2O'], minTemp: 273, heatReleased: 114 }
+    { reactants: ['KOH', 'KOH', 'H2SO4'], products: ['K2SO4', 'H2O', 'H2O'], minTemp: 273, heatReleased: 114 },
+    { reactants: ['KNO3', 'KNO3', 'S', 'C', 'C', 'C'], products: ['K2S', 'N2', 'CO2', 'CO2', 'CO2'], minTemp: 573, heatReleased: 650 }
 ];
 
 export const ROOM_TEMP = 293;
