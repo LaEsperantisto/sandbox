@@ -11,7 +11,10 @@ const brushSlider = document.getElementById('brush-slider');
 const brushVal = document.getElementById('brush-val');
 const tempSlider = document.getElementById('temp-slider');
 const tempInput = document.getElementById('temp-input');
+const tempResetBtn = document.getElementById('reset-temp-btn');
 const tempVal = document.getElementById('temp-val');
+const tempValCelsius = document.getElementById('temp-val-celsius');
+const tempValFahrenheit = document.getElementById('temp-val-fahrenheit');
 const clearBtn = document.getElementById('clear-btn');
 const pauseBtn = document.getElementById('pause-btn');
 const resetBtn = document.getElementById('reset-btn');
@@ -246,7 +249,7 @@ brushSlider.addEventListener('input', (e) => {
 });
 
 function updateTemperatureDisplay(newTemp) {
-    temp = Math.max(0, Math.min(3000, newTemp));
+    temp = Math.max(0, newTemp);
 
     tempVal.innerText = temp;
     tempSlider.value = temp;
@@ -263,6 +266,10 @@ tempSlider.addEventListener('input', (e) => {
 tempInput.addEventListener('input', (e) => {
     updateTemperatureDisplay(parseInt(e.target.value) || 0);
 });
+
+tempResetBtn.addEventListener('click', (e) => {
+    updateTemperatureDisplay(Globals.ROOM_TEMP);
+})
 
 clearBtn.addEventListener('click', () => {
     grid = Array(WIDTH).fill(null).map(() => Array(HEIGHT).fill(0));
@@ -385,7 +392,7 @@ function update() {
             const currentType = cell.type;
             if (currentType === 'barrier') continue;
 
-            if (cell.heat / Math.random() < 100) continue;
+            if (cell.heat / Math.random() < 200) continue;
             
             const currentState = Utils.getState(currentType, cell.heat);
 

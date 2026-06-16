@@ -245,6 +245,10 @@
             font-family: monospace;
             z-index: 9999;
         }
+
+        #reset-temp-btn {
+            color: #f90101;
+        }
     </style>
 </head>
 <body>
@@ -274,9 +278,11 @@
                     
                     <input type="number" id="temp-input" min="0" max="3000" value="293" style="width: 70px; margin-left: 10px;">
                     
-                    <span id="temp-val" style="display:none;">293</span>
+                    <span id="temp-val" style="display:none;">294</span>
                     <span id="temp-val-celsius">20</span>°C / 
-                    <span id="temp-val-fahrenheit">68</span>°F
+                    <span id="temp-val-fahrenheit">69</span>°F
+                    <br>
+                    <button id="reset-temp-btn">Reset to room temperature</button>
                 </div>
                 
                 <button id="book-btn">📖 View Discovery Book</button>
